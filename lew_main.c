@@ -12,6 +12,9 @@ enum
 	NUM_COLUMNS
 };
 
+
+static GtkWidget *window = NULL;
+
 int createDictFile( const char *dictFile );
 JsonNode * create_new_word( const gchar *english, const gchar *russian );
 int rand_range_correct( int range );
@@ -21,12 +24,16 @@ size_t stripWhiteSpace(char** s);
 int word_cmp (char* word1, char* word2);
 
 static void lew_add_columns (GtkTreeView *treeview);
+void lew_open_file_dialog (GtkToolButton *toolbutton, gpointer user_data);
+int lew_read_json_file (gchar *filename, GtkListStore *model);
 
 int main (int argc, char **argv)
 {
 	// Объявляем виджеты
-	GtkWidget *window;  // Главное окно
-	GtkWidget *sw;
+	GtkWidget   *sw;
+	GtkWidget   *toolbar;
+	GtkWidget   *vbox;
+	GtkToolItem *item;
 
 	// Инициализируем GTK+
 	gtk_init (&argc, &argv);
@@ -36,6 +43,10 @@ int main (int argc, char **argv)
 	gtk_window_set_title (GTK_WINDOW (window), "Здравствуй, мир!");
 	gtk_widget_set_size_request (window, 800, 200);
 
+	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	gtk_container_add(GTK_CONTAINER(window), vbox);
+
+
 	// создаем контенер с прокруткой
 	sw = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
@@ -43,17 +54,35 @@ int main (int argc, char **argv)
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
 	                                GTK_POLICY_AUTOMATIC,
 	                                GTK_POLICY_AUTOMATIC);
-	gtk_container_add (GTK_CONTAINER (window), sw);
-
 
 	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
 	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
 
 	lew_add_columns (GTK_TREE_VIEW (treeview));
-
 	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
-
 	gtk_container_add (GTK_CONTAINER (sw), treeview);
+
+
+	toolbar = gtk_toolbar_new ();
+
+	item = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (item), "document-open");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (item), "Open");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (item), TRUE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), item, -1);
+	g_signal_connect(G_OBJECT(item), "clicked", G_CALLBACK(lew_open_file_dialog), (gpointer)model);
+
+	item = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (item), "document-save");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (item), "Save");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (item), TRUE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), item, -1);
+
+
+	gtk_box_pack_start (GTK_BOX(vbox), toolbar, FALSE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(vbox), sw, TRUE, TRUE, 0);
+
+
 
 	// Показываем окно вместе с виджетами
 	gtk_widget_show_all(window);
@@ -61,78 +90,14 @@ int main (int argc, char **argv)
 	// Соединяем сигнал завершения с выходом из программы
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), (gpointer)window);
 
-	char *envhome = getenv("HOME");
-	char *dictFile = NULL;
-	dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
-	sprintf(dictFile,"%s/.dictionary.json",envhome);
 
+	//char *envhome = getenv("HOME");
+	//char *dictFile = NULL;
+	//dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
+	//sprintf(dictFile,"%s/.dictionary.json",envhome);
 	//printf("%s\n", dictFile);
 	//createDictFile( dictFile );
 
-	JsonParser *parser;
-	JsonNode *root;
-	GError *error;
-
-	parser = json_parser_new ();
-
-	error = NULL;
-	json_parser_load_from_file (parser, dictFile, &error);
-	if (error) {
-		g_print ("Unable to parse `%s': %s\n", dictFile, error->message);
-		g_error_free (error);
-		g_object_unref (parser);
-		return EXIT_FAILURE;
-	}
-
-	root = json_parser_get_root (parser);
-
-	if ( JSON_NODE_HOLDS_OBJECT(root) ) {
-		printf("The node contains a JsonObject\n");
-	}
-
-	JsonObject *obj = json_node_get_object(root);
-	JsonArray *dictArray = json_object_get_array_member (obj, "dictionary");
-
-	guint len = json_array_get_length(dictArray);
-
-	g_print ("len of array = %u\n", len);
-
-	int index;
-	JsonObject *objWord;
-	const gchar *english = NULL;
-	const gchar *russian = NULL;
-
-	int i_corr = 0;
-	int i_err = 0;
-
-	char *translate = NULL;
-
-	for ( int i = 0; i < len; ++i ) {
-		index = rand_range_correct(len);
-
-		objWord = json_array_get_object_element (dictArray, index);
-		english = json_object_get_string_member (objWord, "english");
-		russian = json_object_get_string_member (objWord, "russian");
-
-		printf("%3d) %s\n     ",  i, english);
-
-		translate = read_line_from_stdin(translate);
-
-
-		if (translate_cmp(translate, russian) == 0) {
-			printf("     \x1b[32m%s\x1b[0m\n\n", russian);
-			i_corr++;
-		} else {
-			printf("     \x1b[31m%s\x1b[0m\n\n", russian);
-			i_err++;
-		}
-
-
-		free(translate);
-	}
-
-	printf("i_corr = %d\n", i_corr);
-	printf("i_err = %d\n",  i_err);
 
 	// Приложение переходит в вечный цикл ожидания действий пользователя
 	gtk_main();
@@ -405,4 +370,96 @@ lew_add_columns (GtkTreeView *treeview)
 
 	//==========================================================================
 
+}
+
+
+void
+lew_open_file_dialog (GtkToolButton *toolbutton,
+                      gpointer       user_data)
+{
+
+	GtkListStore *model = (GtkListStore *)user_data;
+	gchar *home_dir = (gchar*)g_get_home_dir ();
+
+	GtkFileFilter *filter = gtk_file_filter_new ();        // Создание фильтра
+
+	gtk_file_filter_add_pattern (filter, "*.json");
+
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open image",
+	                                                 GTK_WINDOW (window),
+	                                                 GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                                 "_OK", GTK_RESPONSE_ACCEPT,
+	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
+	                                                 NULL);
+
+	gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), home_dir);
+	gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+
+	// запуск диалога выбора файла
+	switch (gtk_dialog_run (GTK_DIALOG (dialog)))
+	{
+		case GTK_RESPONSE_ACCEPT:   // если нажали клавишу 'Open'
+			{
+				// Узнаём имя файла
+				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+				lew_read_json_file (filename, model);
+			}
+			break;
+		default:
+			break;
+	}
+	gtk_widget_destroy (dialog);
+
+}
+
+
+int lew_read_json_file (gchar *filename, GtkListStore *model)
+{
+
+	g_print("%s\n", filename);
+
+	GtkTreeIter iter;
+	JsonParser *parser;
+	JsonNode *root;
+	GError *error;
+
+	parser = json_parser_new ();
+
+	error = NULL;
+	json_parser_load_from_file (parser, filename, &error);
+	if (error) {
+		g_print ("Unable to parse `%s': %s\n", filename, error->message);
+		g_error_free (error);
+		g_object_unref (parser);
+		return EXIT_FAILURE;
+	}
+	root = json_parser_get_root (parser);
+
+	if ( JSON_NODE_HOLDS_OBJECT(root) ) {
+		printf("The node contains a JsonObject\n");
+	}
+
+	JsonObject *obj = json_node_get_object(root);
+	JsonArray *dictArray = json_object_get_array_member (obj, "dictionary");
+
+	guint len = json_array_get_length(dictArray);
+
+	JsonObject *objWord;
+	const gchar *english = NULL;
+	const gchar *russian = NULL;
+
+	for ( int i = 0; i < len; ++i ) {
+
+		objWord = json_array_get_object_element (dictArray, i);
+		english = json_object_get_string_member (objWord, "english");
+		russian = json_object_get_string_member (objWord, "russian");
+
+		gtk_list_store_insert (model, &iter, -1);
+		//gtk_list_store_append (model, &iter);
+		gtk_list_store_set (model, &iter,
+		                    COLUMN_ENG, english,
+		                    COLUMN_RUS, russian,
+		                    -1);
+	}
+	return EXIT_SUCCESS;
 }
