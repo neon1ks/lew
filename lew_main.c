@@ -5,18 +5,15 @@
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
 
-enum
-{
-	COLUMN_ENG,
-	COLUMN_RUS,
-	NUM_COLUMNS
-};
+#include "lew_json.h"
+
+
 
 
 static GtkWidget *window = NULL;
 
 int createDictFile( const char *dictFile );
-JsonNode * create_new_word( const gchar *english, const gchar *russian );
+
 int rand_range_correct( int range );
 char* read_line_from_stdin( char* buf );
 int translate_cmp(const char *translate, const char *russian);
@@ -25,7 +22,9 @@ int word_cmp (char* word1, char* word2);
 
 static void lew_add_columns (GtkTreeView *treeview);
 void lew_open_file_dialog (GtkToolButton *toolbutton, gpointer user_data);
-int lew_read_json_file (gchar *filename, GtkListStore *model);
+
+static gboolean
+treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 int main (int argc, char **argv)
 {
@@ -62,6 +61,7 @@ int main (int argc, char **argv)
 	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
 	gtk_container_add (GTK_CONTAINER (sw), treeview);
 
+	g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
 
 	toolbar = gtk_toolbar_new ();
 
@@ -141,10 +141,10 @@ int createDictFile( const char *dictFile ) {
 
 	JsonNode * nodeWord = NULL;
 
-	nodeWord = create_new_word ("home", "дом");
+	nodeWord = lew_create_new_translation ("home", "дом");
 	json_array_add_element (dictArray, nodeWord);
 
-	nodeWord = create_new_word ("garden", "сад");
+	nodeWord = lew_create_new_translation ("garden", "сад");
 	json_array_add_element (dictArray, nodeWord);
 
 	json_generator_set_root (dictGenerator, root);
@@ -163,22 +163,7 @@ int createDictFile( const char *dictFile ) {
 	return EXIT_SUCCESS;
 }
 
-JsonNode * create_new_word (const gchar *english, const gchar *russian)
-{
-	JsonNode *nodeWord = json_node_alloc();
-	JsonObject * objectWord = json_object_new ();
-	nodeWord = json_node_init_object (nodeWord, objectWord);
 
-	JsonNode *nodeWordEng = json_node_alloc();
-	nodeWordEng = json_node_init_string (nodeWordEng, english);
-	json_object_set_member (objectWord, "english", nodeWordEng);
-
-	JsonNode *nodeWordRus = json_node_alloc();
-	nodeWordRus = json_node_init_string (nodeWordRus, russian);
-	json_object_set_member (objectWord, "russian", nodeWordRus);
-
-	return nodeWord;
-}
 
 int rand_range_correct(int range)
 {
@@ -413,53 +398,150 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 }
 
 
-int lew_read_json_file (gchar *filename, GtkListStore *model)
+
+
+static gboolean
+treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
 
-	g_print("%s\n", filename);
+  static GtkTreeSelection *sel = NULL;
+  static GtkTreeIter iter;
 
-	GtkTreeIter iter;
-	JsonParser *parser;
-	JsonNode *root;
-	GError *error;
+  GtkTreeView *treeview = GTK_TREE_VIEW (widget);
+  GtkTreeModel *model   = gtk_tree_view_get_model (treeview);
 
-	parser = json_parser_new ();
+  GtkWidget *content_area;
+  GtkWidget *dialog;
+  GtkWidget *hbox;
+  GtkWidget *image;
+  GtkWidget *table;
+  GtkWidget *local_entry1;
+  GtkWidget *local_entry2;
+  GtkWidget *label;
+  gint response;
 
-	error = NULL;
-	json_parser_load_from_file (parser, filename, &error);
-	if (error) {
-		g_print ("Unable to parse `%s': %s\n", filename, error->message);
-		g_error_free (error);
-		g_object_unref (parser);
-		return EXIT_FAILURE;
-	}
-	root = json_parser_get_root (parser);
 
-	if ( JSON_NODE_HOLDS_OBJECT(root) ) {
-		printf("The node contains a JsonObject\n");
-	}
+  if (event->type == GDK_DOUBLE_BUTTON_PRESS)
+    {
+      sel = gtk_tree_view_get_selection (treeview);
+      gtk_tree_selection_get_selected (sel, &model, &iter);
 
-	JsonObject *obj = json_node_get_object(root);
-	JsonArray *dictArray = json_object_get_array_member (obj, "dictionary");
+      gchar *str_eng = NULL;
+      gchar *str_rus = NULL;
 
-	guint len = json_array_get_length(dictArray);
+      // Make sure you terminate calls to gtk_tree_model_get() with a “-1” value
+      gtk_tree_model_get (model, &iter,
+                          COLUMN_ENG, &str_eng,
+                          COLUMN_RUS, &str_rus,
+                          -1 );
 
-	JsonObject *objWord;
-	const gchar *english = NULL;
-	const gchar *russian = NULL;
 
-	for ( int i = 0; i < len; ++i ) {
+      dialog = gtk_dialog_new_with_buttons ("Interactive Dialog",
+                                            GTK_WINDOW (window),
+                                            GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            "OK", GTK_RESPONSE_OK,
+                                            "Cancel", GTK_RESPONSE_CANCEL,
+                                            NULL);
+        /* Set it modal and transient for main window. */
+        gtk_window_set_modal( GTK_WINDOW( dialog ), TRUE );
+        gtk_window_set_transient_for( GTK_WINDOW( dialog ),
+                                      GTK_WINDOW( window ) );
+      content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
 
-		objWord = json_array_get_object_element (dictArray, i);
-		english = json_object_get_string_member (objWord, "english");
-		russian = json_object_get_string_member (objWord, "russian");
+      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+      gtk_container_set_border_width (GTK_CONTAINER (hbox), 8);
+      gtk_box_pack_start (GTK_BOX (content_area), hbox, FALSE, FALSE, 0);
 
-		gtk_list_store_insert (model, &iter, -1);
-		//gtk_list_store_append (model, &iter);
-		gtk_list_store_set (model, &iter,
-		                    COLUMN_ENG, english,
-		                    COLUMN_RUS, russian,
-		                    -1);
-	}
-	return EXIT_SUCCESS;
+      image = gtk_image_new_from_icon_name ("dialog-question", GTK_ICON_SIZE_DIALOG);
+      gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
+
+      table = gtk_grid_new ();
+      gtk_grid_set_row_spacing (GTK_GRID (table), 4);
+      gtk_grid_set_column_spacing (GTK_GRID (table), 4);
+      gtk_box_pack_start (GTK_BOX (hbox), table, TRUE, TRUE, 0);
+      label = gtk_label_new_with_mnemonic ("english");
+      gtk_grid_attach (GTK_GRID (table), label, 0, 0, 1, 1);
+      local_entry1 = gtk_entry_new ();
+      gtk_entry_set_text (GTK_ENTRY (local_entry1), str_eng);
+      gtk_grid_attach (GTK_GRID (table), local_entry1, 1, 0, 1, 1);
+      gtk_label_set_mnemonic_widget (GTK_LABEL (label), local_entry1);
+
+      label = gtk_label_new_with_mnemonic ("russian");
+      gtk_grid_attach (GTK_GRID (table), label, 0, 1, 1, 1);
+
+      local_entry2 = gtk_entry_new ();
+      gtk_entry_set_text (GTK_ENTRY (local_entry2), str_rus);
+      gtk_grid_attach (GTK_GRID (table), local_entry2, 1, 1, 1, 1);
+      gtk_label_set_mnemonic_widget (GTK_LABEL (label), local_entry2);
+
+      gtk_widget_show_all (hbox);
+      //gtk_window_set_modal( GTK_WINDOW (dialog), TRUE );
+      //gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (window));
+
+      response = gtk_dialog_run (GTK_DIALOG (dialog));
+
+
+      if (response == GTK_RESPONSE_OK)
+        {
+          gtk_list_store_set (GTK_LIST_STORE(model), &iter,
+                              COLUMN_ENG, gtk_entry_get_text (GTK_ENTRY (local_entry1)),
+                              COLUMN_RUS, gtk_entry_get_text (GTK_ENTRY (local_entry2)),
+                              -1);
+        }
+      gtk_widget_destroy (dialog);
+
+    }
+
+  return FALSE;
 }
+
+
+/*
+static void
+add_item (GtkWidget *button, gpointer data)
+{
+  //Item foo;
+  //GtkTreeIter current, iter;
+  //GtkTreePath *path;
+
+  GtkTreeModel *model;
+  //GtkTreeViewColumn *column;
+
+
+  GtkTreeView *treeview = (GtkTreeView *)data;
+
+  //g_return_if_fail (articles != NULL);
+
+  //foo.number = 0;
+  //foo.product = g_strdup ("Description here");
+  //foo.yummy = 50;
+  //g_array_append_vals (articles, &foo, 1);
+
+  // Insert a new row below the current one
+  //gtk_tree_view_get_cursor (treeview, &path, NULL);
+	model = gtk_tree_view_get_model (treeview);
+
+	gtk_list_store_insert (GTK_LIST_STORE (model), &iter, -1);
+
+	gtk_list_store_insert (model, &iter, -1);
+	//gtk_list_store_append (model, &iter);
+	gtk_list_store_set (GTK_LIST_STORE (model), &iter,
+	                    COLUMN_ENG, english,
+	                    COLUMN_RUS, russian,
+	                    -1);
+
+
+  // Set the data for the new row
+  //gtk_list_store_set (GTK_LIST_STORE (model), &iter,
+                      COLUMN_ITEM_NUMBER, foo.number,
+                      COLUMN_ITEM_PRODUCT, foo.product,
+                      COLUMN_ITEM_YUMMY, foo.yummy,
+                      -1);
+
+  // Move focus to the new row
+  path = gtk_tree_model_get_path (model, &iter);
+  column = gtk_tree_view_get_column (treeview, 0);
+  gtk_tree_view_set_cursor (treeview, path, column, FALSE);
+
+  gtk_tree_path_free (path);
+}*/
