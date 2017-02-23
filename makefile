@@ -1,7 +1,7 @@
 CC     = gcc
 CLEAN  = rm -f
-CFLAGS = -Wall -g `pkg-config glib-2.0 json-glib-1.0 --cflags`
-LDADD  = `pkg-config glib-2.0 json-glib-1.0 --libs` -lm
+CFLAGS = -Wall -g `pkg-config json-glib-1.0 gtk+-3.0 --cflags`
+LDADD  = `pkg-config json-glib-1.0 gtk+-3.0 --libs` -lm
 
 all: lew_main
 

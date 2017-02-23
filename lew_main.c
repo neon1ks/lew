@@ -2,7 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
+
+enum
+{
+	COLUMN_ENG,
+	COLUMN_RUS,
+	NUM_COLUMNS
+};
 
 int createDictFile( const char *dictFile );
 JsonNode * create_new_word( const gchar *english, const gchar *russian );
@@ -12,8 +20,46 @@ int translate_cmp(const char *translate, const char *russian);
 size_t stripWhiteSpace(char** s);
 int word_cmp (char* word1, char* word2);
 
-int main(int argc, char **argv)
+static void lew_add_columns (GtkTreeView *treeview);
+
+int main (int argc, char **argv)
 {
+	// Объявляем виджеты
+	GtkWidget *window;  // Главное окно
+	GtkWidget *sw;
+
+	// Инициализируем GTK+
+	gtk_init (&argc, &argv);
+
+	// Создаем главное окно
+	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW (window), "Здравствуй, мир!");
+	gtk_widget_set_size_request (window, 800, 200);
+
+	// создаем контенер с прокруткой
+	sw = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
+	                                     GTK_SHADOW_ETCHED_IN);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
+	                                GTK_POLICY_AUTOMATIC,
+	                                GTK_POLICY_AUTOMATIC);
+	gtk_container_add (GTK_CONTAINER (window), sw);
+
+
+	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
+	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
+
+	lew_add_columns (GTK_TREE_VIEW (treeview));
+
+	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
+
+	gtk_container_add (GTK_CONTAINER (sw), treeview);
+
+	// Показываем окно вместе с виджетами
+	gtk_widget_show_all(window);
+
+	// Соединяем сигнал завершения с выходом из программы
+	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), (gpointer)window);
 
 	char *envhome = getenv("HOME");
 	char *dictFile = NULL;
@@ -87,6 +133,10 @@ int main(int argc, char **argv)
 
 	printf("i_corr = %d\n", i_corr);
 	printf("i_err = %d\n",  i_err);
+
+	// Приложение переходит в вечный цикл ожидания действий пользователя
+	gtk_main();
+
 
 	return EXIT_SUCCESS;
 }
@@ -302,4 +352,57 @@ int word_cmp (char* word1, char* word2)
 	free(s2_orig);
 
 	return i_cmp;
+}
+
+
+
+
+static void
+lew_add_columns (GtkTreeView *treeview)
+{
+	GtkCellRenderer *renderer = NULL;
+	GtkTreeViewColumn *col = NULL;
+
+	//==========================================================================
+
+	// Создаем первый столбец для английского текста
+	col = gtk_tree_view_column_new ();
+
+	// Настраиваем столбец
+	gtk_tree_view_column_set_title(col, "English");            // Заголовок
+	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_ENG); // Сортировка
+
+	// Создаем и настраиваем обработчик ячеек для столбца с английским текстом
+	renderer = gtk_cell_renderer_text_new ();
+	g_object_set(G_OBJECT(renderer), "width-chars", 49, "wrap-mode", PANGO_WRAP_WORD, "wrap-width", 49, NULL);
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_ENG);
+
+	// Упаковываем столбец
+	gtk_tree_view_append_column (GTK_TREE_VIEW( treeview), col);
+
+	//==========================================================================
+
+	// Создаем второй столбец для руского текста
+	col = gtk_tree_view_column_new ();
+
+	// Настройка столбца
+	gtk_tree_view_column_set_title (col, "Russian");           // Заголовок
+	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_RUS); // Сортировка
+
+	// Создаем и настраиваем обработчик ячеек для столбца с русским текстом
+	renderer = gtk_cell_renderer_text_new ();
+	g_object_set(G_OBJECT(renderer), "wrap-mode", PANGO_WRAP_WORD, "wrap-width", 60, NULL);
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_RUS);
+
+	// Упаковываем столбец
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+
+	//==========================================================================
+
 }
