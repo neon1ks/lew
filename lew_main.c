@@ -10,10 +10,17 @@
 
 
 
-static GtkWidget   *window = NULL;
+static GtkWidget   *window     = NULL;
+static GtkWidget   *treeview   = NULL;
 
-static GtkToolItem *saveItem = NULL;
-static GtkToolItem *openItem = NULL;
+static GtkToolItem *newItem    = NULL;
+static GtkToolItem *saveItem   = NULL;
+static GtkToolItem *openItem   = NULL;
+static GtkToolItem *closeItem  = NULL;
+
+static GtkToolItem *addItem    = NULL;
+static GtkToolItem *editItem   = NULL;
+static GtkToolItem *removeItem = NULL;
 
 int createDictFile( const char *dictFile );
 
@@ -36,15 +43,24 @@ GtkTreeViewColumn *lew_create_column_index   (void);
 GtkTreeViewColumn *lew_create_column_english (void);
 GtkTreeViewColumn *lew_create_column_russian (void);
 
+
+void
+lew_action_iten_edit (GtkToolButton *toolbutton,
+                      gpointer       user_data);
+
+
 int main (int argc, char **argv)
 {
 	// Объявляем виджеты
 	GtkWidget   *sw;
 	GtkWidget   *toolbar;
-	GtkWidget   *vbox;
+	GtkWidget   *vbox_main;
 	GtkWidget   *hbox;
 	GtkWidget   *button;
 	//GtkToolItem *item;
+
+	//GtkWidget   *frame_main;
+	//GtkWidget   *vbox_frame;
 
 	// Инициализируем GTK+
 	gtk_init (&argc, &argv);
@@ -53,30 +69,39 @@ int main (int argc, char **argv)
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW (window), "Здравствуй, мир!");
 	gtk_widget_set_size_request (window, 900, 200);
-	gtk_container_set_border_width (GTK_CONTAINER (window), 5);
+	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
-	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-	gtk_container_add(GTK_CONTAINER(window), vbox);
+	vbox_main = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	gtk_container_add(GTK_CONTAINER(window), vbox_main);
 
 
 	// создаем контенер с прокруткой
 	sw = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
 	                                     GTK_SHADOW_ETCHED_IN);
+
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
 	                                GTK_POLICY_AUTOMATIC,
 	                                GTK_POLICY_AUTOMATIC);
 
 	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
-	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
+
+	treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
+	gtk_widget_set_sensitive (GTK_WIDGET (treeview), FALSE);
 
 	lew_add_columns (GTK_TREE_VIEW (treeview));
 	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
 	gtk_container_add (GTK_CONTAINER (sw), treeview);
 
-	g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
+	//g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
 
 	toolbar = gtk_toolbar_new ();
+
+	newItem = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (newItem), "gtk-new");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (newItem), "New");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (newItem), TRUE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), newItem, -1);
 
 	openItem = gtk_tool_button_new (NULL, NULL);
 	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (openItem), "document-open");
@@ -92,14 +117,59 @@ int main (int argc, char **argv)
 	gtk_widget_set_sensitive (GTK_WIDGET (saveItem), FALSE);
 	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), saveItem, -1);
 
+	closeItem = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (closeItem), "gtk-close");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (closeItem), "Close");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (closeItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (closeItem), FALSE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), closeItem, -1);
 
-	gtk_box_pack_start (GTK_BOX(vbox), toolbar, FALSE, TRUE, 0);
-	gtk_box_pack_start (GTK_BOX(vbox), sw, TRUE, TRUE, 0);
+
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), gtk_separator_tool_item_new (), -1);
+
+
+
+	addItem = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (addItem), "gtk-add");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (addItem), "Add item");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (addItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (addItem), FALSE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), addItem, -1);
+
+	editItem = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (editItem), "gtk-edit");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (editItem), "Edit item");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (editItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (editItem), FALSE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), editItem, -1);
+
+
+
+	removeItem = gtk_tool_button_new (NULL, NULL);
+	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (removeItem), "gtk-remove");
+	gtk_tool_button_set_label (GTK_TOOL_BUTTON (removeItem), "Remove item");
+	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (removeItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (removeItem), FALSE);
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), removeItem, -1);
+
+
+	//frame_main = gtk_frame_new ("Fame");
+	//gtk_container_set_border_width (GTK_CONTAINER (frame_main), 8);
+	//vbox_frame = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
+	//gtk_container_set_border_width (GTK_CONTAINER (vbox_frame), 8);
+	//gtk_container_add(GTK_CONTAINER(frame_main), vbox_frame);
+
+	gtk_box_pack_start (GTK_BOX(vbox_main), toolbar, FALSE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(vbox_main), sw, TRUE, TRUE, 0);
+	gtk_container_set_border_width (GTK_CONTAINER (sw), 8);
+
+
+	//gtk_box_pack_start (GTK_BOX(vbox_main), frame_main, TRUE, TRUE, 0);
 
       /* some buttons */
       hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
       gtk_box_set_homogeneous (GTK_BOX (hbox), TRUE);
-      gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+      //gtk_box_pack_start (GTK_BOX (vbox_frame), hbox, FALSE, FALSE, 0);
 
       button = gtk_button_new_with_label ("Add item");
       //g_signal_connect (button, "clicked",
@@ -118,10 +188,12 @@ int main (int argc, char **argv)
 	// Показываем окно вместе с виджетами
 	gtk_widget_show_all(window);
 
+	g_signal_connect(G_OBJECT(editItem), "clicked", G_CALLBACK(lew_action_iten_edit), (gpointer)treeview);
+
 	// Соединяем сигнал завершения с выходом из программы
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), (gpointer)window);
 
-
+	//lew_action_iten_edit
 	//char *envhome = getenv("HOME");
 	//char *dictFile = NULL;
 	//dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
@@ -387,7 +459,9 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 				// Узнаём имя файла
 				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 				if ( !lew_read_json_file (filename, model) ) {
-					gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+					//gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
 				}
 			}
@@ -422,7 +496,13 @@ lew_edit_item (GtkWidget *button, gpointer data)
 	lew_edit_json_item (window, treeview);
 }
 
-
+void
+lew_action_iten_edit (GtkToolButton *toolbutton,
+                      gpointer       user_data)
+{
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+	lew_edit_json_item (window, treeview);
+}
 /*
 static void
 add_item (GtkWidget *button, gpointer data)
