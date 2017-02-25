@@ -8,6 +8,7 @@
 #include "lew_json.h"
 
 
+
 static GtkWidget   *window     = NULL;
 
 static GtkToolItem *newItem    = NULL;
@@ -20,177 +21,105 @@ static GtkToolItem *editItem   = NULL;
 static GtkToolItem *removeItem = NULL;
 
 
-//~ static gboolean
-//~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
-static void lew_add_columns (GtkTreeView *treeview);
-
-GtkTreeViewColumn *lew_create_column_index   (void);
-GtkTreeViewColumn *lew_create_column_english (void);
-GtkTreeViewColumn *lew_create_column_russian (void);
-
-GtkWidget *lew_create_toolbar_top (void);
-GtkWidget *lew_create_treeview    (void);
-
-static void lew_open_file_dialog (GtkToolButton *toolbutton, gpointer user_data);
-static void lew_action_iten_edit (GtkToolButton *toolbutton, gpointer user_data);
-static void lew_action_iten_add  (GtkToolButton *toolbutton, gpointer user_data);
-
-int main (int argc, char **argv)
+GtkTreeViewColumn *
+lew_create_column_index (void)
 {
-	// Объявляем виджеты
-	GtkWidget   *sw         = NULL;
-	GtkWidget   *toolbar    = NULL;
-	GtkWidget   *vbox_main  = NULL;
-	GtkWidget   *treeview   = NULL;
+	GtkTreeViewColumn *col      = NULL;
+	GtkCellRenderer   *renderer = NULL;
 
-	// Инициализируем GTK+
-	gtk_init (&argc, &argv);
+	col = gtk_tree_view_column_new ();
 
-	// Создаем главное окно
-	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW (window), "LEW Editor");
-	gtk_widget_set_size_request (window, 900, 200);
-	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+	// Настраиваем столбец
+	gtk_tree_view_column_set_title (col, "Index");              // Заголовок столбца
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
 
-	vbox_main = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add(GTK_CONTAINER(window), vbox_main);
+	// Создаем и настраиваем обработчик ячеек
+	renderer = gtk_cell_renderer_text_new ();
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_NUM);
 
-
-	toolbar = lew_create_toolbar_top ();
-	gtk_box_pack_start (GTK_BOX (vbox_main), toolbar, FALSE, TRUE, 0);
-
-
-	// создаем контенер с прокруткой
-	sw = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
-	                                     GTK_SHADOW_ETCHED_IN);
-
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
-	                                GTK_POLICY_AUTOMATIC,
-	                                GTK_POLICY_AUTOMATIC);
-	gtk_container_set_border_width (GTK_CONTAINER (sw), 8);
-	gtk_box_pack_start (GTK_BOX(vbox_main), sw, TRUE, TRUE, 0);
-
-
-	treeview = lew_create_treeview ();
-	gtk_container_add (GTK_CONTAINER (sw), treeview);
-
-	// Показываем окно со всеми виджетами
-	gtk_widget_show_all(window);
-
-
-
-	g_signal_connect(G_OBJECT(openItem), "clicked", G_CALLBACK(lew_open_file_dialog), (gpointer)treeview);
-	g_signal_connect(G_OBJECT(editItem), "clicked", G_CALLBACK(lew_action_iten_edit), (gpointer)treeview);
-	g_signal_connect(G_OBJECT(addItem),  "clicked", G_CALLBACK(lew_action_iten_add),  (gpointer)treeview);
-
-	//~ g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
-
-	// Соединяем сигнал завершения с выходом из программы
-	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), (gpointer)window);
-
-
-	//char *envhome = getenv("HOME");
-	//char *dictFile = NULL;
-	//dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
-	//sprintf(dictFile,"%s/.dictionary.json",envhome);
-	//printf("%s\n", dictFile);
-	//createDictFile( dictFile );
-
-
-	// Приложение переходит в вечный цикл ожидания действий пользователя
-	gtk_main();
-
-
-	return EXIT_SUCCESS;
+	return col;
 }
+
+
+
+GtkTreeViewColumn *
+lew_create_column_english (void)
+{
+	GtkTreeViewColumn *col      = NULL;
+	GtkCellRenderer   *renderer = NULL;
+
+	col = gtk_tree_view_column_new ();
+
+	// Настраиваем столбец
+	gtk_tree_view_column_set_title (col, "English");           // Заголовок
+	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_ENG); // Сортировка
+
+	// Создаем и настраиваем обработчик ячеек
+	renderer = gtk_cell_renderer_text_new ();
+	g_object_set (G_OBJECT (renderer), "width-chars", 49, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  49, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_ENG);
+
+	return col;
+}
+
+
+
+GtkTreeViewColumn *
+lew_create_column_russian (void)
+{
+	GtkTreeViewColumn *col      = NULL;
+	GtkCellRenderer   *renderer = NULL;
+
+	col = gtk_tree_view_column_new ();
+
+	// Настройка столбца
+	gtk_tree_view_column_set_title (col, "Russian");           // Заголовок
+	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_RUS); // Сортировка
+
+	// Создаем и настраиваем обработчик ячеек
+	renderer = gtk_cell_renderer_text_new ();
+	g_object_set (G_OBJECT (renderer), "width-chars", 49, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  49, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_RUS);
+
+	return col;
+}
+
 
 
 void
-lew_open_file_dialog (GtkToolButton *toolbutton,
-                      gpointer       user_data)
+lew_add_columns (GtkTreeView *treeview)
 {
+	GtkTreeViewColumn *col = NULL;
 
-	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
+	// Создаем столбец для индекса
+	col = lew_create_column_index ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 
-	gchar *home_dir = (gchar*)g_get_home_dir ();
+	// Создаем столбец для английского текста
+	col = lew_create_column_english ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 
-	GtkFileFilter *filter = gtk_file_filter_new (); // Создание фильтра
-	gtk_file_filter_add_pattern (filter, "*.json");
-
-	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open image",
-	                                                 GTK_WINDOW (window),
-	                                                 GTK_FILE_CHOOSER_ACTION_OPEN,
-	                                                 "_OK", GTK_RESPONSE_ACCEPT,
-	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
-	                                                 NULL);
-
-	gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), home_dir);
-	gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
-
-	// запуск диалога выбора файла
-	switch (gtk_dialog_run (GTK_DIALOG (dialog)))
-	{
-		case GTK_RESPONSE_ACCEPT:   // если нажали клавишу 'Open'
-			{
-				// Узнаём имя файла
-				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-				if ( !lew_read_json_file (filename, GTK_LIST_STORE (model)) ) {
-					gtk_widget_set_sensitive (GTK_WIDGET (addItem),  TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
-				}
-			}
-			break;
-		default:
-			break;
-	}
-	gtk_widget_destroy (dialog);
-
-}
-
-//~ static gboolean
-//~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
-//~ {
-	//~ GtkTreeView *treeview = GTK_TREE_VIEW (widget);
-	//~ if (event->type == GDK_DOUBLE_BUTTON_PRESS)
-	//~ {
-		//~ if (lew_form_translation_edit (window, treeview, FALSE)) {
-			//~ gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
-		//~ }
-	//~ }
-	//~ return FALSE;
-//~ }
-
-static void
-lew_action_iten_add (GtkToolButton *toolbutton,
-                     gpointer       user_data)
-{
-	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	if (lew_form_translation_edit (window, treeview, TRUE)) {
-		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
-	}
-}
-
-static void
-lew_action_iten_edit (GtkToolButton *toolbutton,
-                      gpointer       user_data)
-{
-	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	if (lew_form_translation_edit (window, treeview, FALSE)) {
-		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
-	}
+	// Создаем cтолбец для русского текста
+	col = lew_create_column_russian ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 }
 
 
 
-
-
-GtkWidget *lew_create_toolbar_top (void)
+GtkWidget *lew_create_toolbar (void)
 {
 	GtkWidget *toolbar = gtk_toolbar_new ();
 
@@ -248,6 +177,7 @@ GtkWidget *lew_create_toolbar_top (void)
 }
 
 
+
 GtkWidget *lew_create_treeview (void)
 {
 	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
@@ -258,91 +188,169 @@ GtkWidget *lew_create_treeview (void)
 	return treeview;
 }
 
-static void
-lew_add_columns (GtkTreeView *treeview)
+
+
+void
+lew_open_file_dialog (GtkToolButton *toolbutton,
+                      gpointer       user_data)
 {
-	GtkTreeViewColumn *col = NULL;
 
-	// Создаем столбец для индекса
-	col = lew_create_column_index ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
 
-	// Создаем столбец для английского текста
-	col = lew_create_column_english ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+	gchar *home_dir = (gchar*)g_get_home_dir ();
 
-	// Создаем cтолбец для русского текста
-	col = lew_create_column_russian ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+	GtkFileFilter *filter = gtk_file_filter_new (); // Создание фильтра
+	gtk_file_filter_add_pattern (filter, "*.json");
+
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open image",
+	                                                 GTK_WINDOW (window),
+	                                                 GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                                 "_OK", GTK_RESPONSE_ACCEPT,
+	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
+	                                                 NULL);
+
+	gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), home_dir);
+	gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+
+	// запуск диалога выбора файла
+	switch (gtk_dialog_run (GTK_DIALOG (dialog)))
+	{
+		case GTK_RESPONSE_ACCEPT:   // если нажали клавишу 'Open'
+			{
+				// Узнаём имя файла
+				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+				if ( !lew_read_json_file (filename, GTK_LIST_STORE (model)) ) {
+					gtk_widget_set_sensitive (GTK_WIDGET (addItem),  TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
+				}
+			}
+			break;
+		default:
+			break;
+	}
+	gtk_widget_destroy (dialog);
+
 }
 
 
 
-GtkTreeViewColumn *
-lew_create_column_index (void)
+void
+lew_action_iten_add (GtkToolButton *toolbutton,
+                     gpointer       user_data)
 {
-	GtkTreeViewColumn *col      = NULL;
-	GtkCellRenderer   *renderer = NULL;
-
-	col = gtk_tree_view_column_new ();
-
-	// Настраиваем столбец
-	gtk_tree_view_column_set_title(col, "Index");              // Заголовок столбца
-	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
-	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
-
-	// Создаем и настраиваем обработчик ячеек
-	renderer = gtk_cell_renderer_text_new ();
-	gtk_tree_view_column_pack_start (col, renderer, TRUE);
-	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_NUM);
-
-	return col;
-}
-
-GtkTreeViewColumn *
-lew_create_column_english (void)
-{
-	GtkTreeViewColumn *col      = NULL;
-	GtkCellRenderer   *renderer = NULL;
-
-	col = gtk_tree_view_column_new ();
-
-	// Настраиваем столбец
-	gtk_tree_view_column_set_title(col, "English");            // Заголовок
-	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
-	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
-	gtk_tree_view_column_set_sort_column_id (col, COLUMN_ENG); // Сортировка
-
-	// Создаем и настраиваем обработчик ячеек
-	renderer = gtk_cell_renderer_text_new ();
-	g_object_set(G_OBJECT(renderer), "width-chars", 49, "wrap-mode", PANGO_WRAP_WORD, "wrap-width", 49, NULL);
-	gtk_tree_view_column_pack_start (col, renderer, TRUE);
-	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_ENG);
-
-	return col;
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+	if (lew_form_translation_edit (window, treeview, TRUE)) {
+		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+	}
 }
 
 
-GtkTreeViewColumn *
-lew_create_column_russian (void)
+
+void
+lew_action_iten_edit (GtkToolButton *toolbutton,
+                      gpointer       user_data)
 {
-	GtkTreeViewColumn *col      = NULL;
-	GtkCellRenderer   *renderer = NULL;
-
-	col = gtk_tree_view_column_new ();
-
-	// Настройка столбца
-	gtk_tree_view_column_set_title (col, "Russian");           // Заголовок
-	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
-	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
-	gtk_tree_view_column_set_sort_column_id (col, COLUMN_RUS); // Сортировка
-
-	// Создаем и настраиваем обработчик ячеек
-	renderer = gtk_cell_renderer_text_new ();
-	g_object_set(G_OBJECT(renderer), "wrap-mode", PANGO_WRAP_WORD, "wrap-width", 60, NULL);
-	gtk_tree_view_column_pack_start (col, renderer, TRUE);
-	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_RUS);
-
-	return col;
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+	if (lew_form_translation_edit (window, treeview, FALSE)) {
+		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+	}
 }
 
+
+
+//~ gboolean
+//~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+//~ {
+	//~ GtkTreeView *treeview = GTK_TREE_VIEW (widget);
+	//~ if (event->type == GDK_DOUBLE_BUTTON_PRESS)
+	//~ {
+		//~ if (lew_form_translation_edit (window, treeview, FALSE)) {
+			//~ gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+		//~ }
+	//~ }
+	//~ return FALSE;
+//~ }
+
+
+
+GtkWidget *lew_create_scrolled_window (void)
+{
+	GtkWidget *sw = gtk_scrolled_window_new (NULL, NULL);
+
+	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
+	                                     GTK_SHADOW_ETCHED_IN);
+
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
+	                                GTK_POLICY_AUTOMATIC,
+	                                GTK_POLICY_AUTOMATIC);
+
+	gtk_container_set_border_width (GTK_CONTAINER (sw), 8);
+
+	return sw;
+}
+
+
+
+int main (int argc, char **argv)
+{
+	GtkWidget   *sw         = NULL;
+	GtkWidget   *vbox       = NULL;
+	GtkWidget   *toolbar    = NULL;
+	GtkWidget   *treeview   = NULL;
+
+	// Инициализация GTK+
+	gtk_init (&argc, &argv);
+
+	// Создание главного окна
+	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW (window), "LEW Editor");
+	gtk_widget_set_size_request (window, 900, 200);
+	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+
+	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	gtk_container_add(GTK_CONTAINER (window), vbox);
+
+	// Создание панели инструменов
+	toolbar = lew_create_toolbar ();
+	gtk_box_pack_start (GTK_BOX (vbox), toolbar, FALSE, TRUE, 0);
+
+	// Создание контенера с прокрутками по вертикали и горизонтали
+	sw = lew_create_scrolled_window ();
+	gtk_box_pack_start (GTK_BOX (vbox), sw, TRUE, TRUE, 0);
+
+	// Создание и настройка treeview
+	treeview = lew_create_treeview ();
+	gtk_container_add (GTK_CONTAINER (sw), treeview);
+
+	// Показываем окно со всеми виджетами
+	gtk_widget_show_all(window);
+
+
+	g_signal_connect (G_OBJECT (openItem), "clicked", G_CALLBACK (lew_open_file_dialog), (gpointer)treeview);
+	g_signal_connect (G_OBJECT (editItem), "clicked", G_CALLBACK (lew_action_iten_edit), (gpointer)treeview);
+	g_signal_connect (G_OBJECT (addItem),  "clicked", G_CALLBACK (lew_action_iten_add),  (gpointer)treeview);
+
+	//~ g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
+
+	// Соединяем сигнал завершения с выходом из программы
+	g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (gtk_main_quit), (gpointer)window);
+
+
+	//~ char *envhome = getenv("HOME");
+	//~ char *dictFile = NULL;
+	//~ dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
+	//~ sprintf(dictFile,"%s/.dictionary.json",envhome);
+	//~ printf("%s\n", dictFile);
+	//~ createDictFile( dictFile );
+
+
+	// Приложение переходит в вечный цикл ожидания действий пользователя
+	gtk_main();
+
+
+	return EXIT_SUCCESS;
+}
