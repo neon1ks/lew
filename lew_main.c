@@ -72,7 +72,7 @@ int main (int argc, char **argv)
 	                                GTK_POLICY_AUTOMATIC,
 	                                GTK_POLICY_AUTOMATIC);
 
-	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING);
+	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
 
 	treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
 	gtk_widget_set_sensitive (GTK_WIDGET (treeview), FALSE);
@@ -433,31 +433,16 @@ static void
 lew_action_iten_add (GtkToolButton *toolbutton,
                      gpointer       user_data)
 {
-	GtkTreeIter iter;
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
-	//gtk_list_store_insert (GTK_LIST_STORE (model), &iter, -1);
-
-	gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-
-	lew_form_translation_edit (window, model, &iter, -1);
+	lew_form_translation_edit (window, treeview, TRUE);
 }
 
 static void
 lew_action_iten_edit (GtkToolButton *toolbutton,
                       gpointer       user_data)
 {
-	gint index;
-	GtkTreeIter iter;
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
-	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-
-	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
-	{
-		gtk_tree_model_get (model, &iter, COLUMN_NUM, &index, -1);
-		lew_form_translation_edit (window, model, &iter, index);
-	}
+	lew_form_translation_edit (window, treeview, FALSE);
 }
 
 
