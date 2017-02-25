@@ -17,5 +17,5 @@ lew_json.o: lew_json.c lew_json.h
 
 clean:
 	$(CLEAN) lew_main
-	$(CLEAN) lew_main.o
+	$(CLEAN) lew_main.o lew_json.o
 
