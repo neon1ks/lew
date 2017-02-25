@@ -75,8 +75,8 @@ JsonNode * lew_create_new_translation (const gchar *english, const gchar *russia
 }
 
 gboolean lew_form_translation_edit (GtkWidget    *window,
-                                GtkTreeView   *treeview,
-                                gboolean       isNewTranslation)
+                                    GtkTreeView   *treeview,
+                                    gboolean       isNewTranslation)
 {
 
 	gboolean status = FALSE;
