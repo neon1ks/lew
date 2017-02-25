@@ -33,14 +33,13 @@ int lew_read_json_file (gchar *filename, GtkListStore *model)
 
 	dictArray = json_object_get_array_member (json_node_get_object (root), "dictionary");
 
-	guint len = json_array_get_length(dictArray);
-	dictLen = len;
+	dictLen = json_array_get_length(dictArray);
 
 	JsonObject *objWord;
 	const gchar *english = NULL;
 	const gchar *russian = NULL;
 
-	for (int i = 0; i < len; ++i) {
+	for (guint i = 0; i < dictLen; ++i) {
 
 		objWord = json_array_get_object_element (dictArray, i);
 		english = json_object_get_string_member (objWord, "english");

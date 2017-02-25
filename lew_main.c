@@ -119,7 +119,8 @@ lew_add_columns (GtkTreeView *treeview)
 
 
 
-GtkWidget *lew_create_toolbar (void)
+GtkWidget *
+lew_create_toolbar (void)
 {
 	GtkWidget *toolbar = gtk_toolbar_new ();
 
@@ -178,7 +179,8 @@ GtkWidget *lew_create_toolbar (void)
 
 
 
-GtkWidget *lew_create_treeview (void)
+GtkWidget *
+lew_create_treeview (void)
 {
 	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
 	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
@@ -277,7 +279,8 @@ lew_action_iten_edit (GtkToolButton *toolbutton,
 
 
 
-GtkWidget *lew_create_scrolled_window (void)
+GtkWidget *
+lew_create_scrolled_window (void)
 {
 	GtkWidget *sw = gtk_scrolled_window_new (NULL, NULL);
 
@@ -354,3 +357,6 @@ int main (int argc, char **argv)
 
 	return EXIT_SUCCESS;
 }
+
+
+
