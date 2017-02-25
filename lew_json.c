@@ -10,21 +10,12 @@ static guint dictLen = 0;
 int lew_read_json_file (gchar *filename, GtkListStore *model)
 {
 
-	g_print ("%s\n", filename);
+	//~ g_print ("%s\n", filename);
 
 	GtkTreeIter iter;
 	GError *error;
 
 	parser = json_parser_new ();
-
-	//gboolean immutable;
-	//g_object_get (G_OBJECT(parser), "immutable", &immutable, NULL);
-	//if (immutable == FALSE) {
-	//	g_print("%s\n", "immutable == FALSE");
-	//}
-	//if (immutable == TRUE) {
-	//	g_print("%s\n", "immutable == TRUE");
-	//}
 
 	error = NULL;
 	json_parser_load_from_file (parser, filename, &error);
@@ -36,9 +27,9 @@ int lew_read_json_file (gchar *filename, GtkListStore *model)
 	}
 	root = json_parser_get_root (parser);
 
-	if ( JSON_NODE_HOLDS_OBJECT(root) ) {
-		printf("The node contains a JsonObject\n");
-	}
+	//~ if ( JSON_NODE_HOLDS_OBJECT(root) ) {
+		//~ printf("The node contains a JsonObject\n");
+	//~ }
 
 	dictArray = json_object_get_array_member (json_node_get_object (root), "dictionary");
 
@@ -83,11 +74,12 @@ JsonNode * lew_create_new_translation (const gchar *english, const gchar *russia
 	return nodeWord;
 }
 
-void lew_form_translation_edit (GtkWidget    *window,
+gboolean lew_form_translation_edit (GtkWidget    *window,
                                 GtkTreeView   *treeview,
                                 gboolean       isNewTranslation)
 {
 
+	gboolean status = FALSE;
 	guint index;
 	GtkTreeIter iter;
 	GtkTreeSelection *selection = NULL;
@@ -99,7 +91,7 @@ void lew_form_translation_edit (GtkWidget    *window,
 			gtk_tree_model_get (model, &iter, COLUMN_NUM, &index, -1);
 		}
 		else {
-			return;
+			return FALSE;
 		}
 	}
 
@@ -183,17 +175,17 @@ void lew_form_translation_edit (GtkWidget    *window,
 		                    COLUMN_ENG, english,
 		                    COLUMN_RUS, russian,
 		                    -1);
+
+
+		// Move focus to the new row
+		// Перемещение фокуса на новую запись
+		GtkTreePath *path = gtk_tree_model_get_path (model, &iter);
+		GtkTreeViewColumn *column = gtk_tree_view_get_column (treeview, 0);
+		gtk_tree_view_set_cursor (treeview, path, column, FALSE);
+		gtk_tree_path_free (path);
+		status = TRUE;
 	}
 	gtk_widget_destroy (dialog);
-
-	GtkTreePath *path;
-	GtkTreeViewColumn *column;
-
-	// Move focus to the new row
-	path = gtk_tree_model_get_path (model, &iter);
-	column = gtk_tree_view_get_column (treeview, 0);
-	gtk_tree_view_set_cursor (treeview, path, column, FALSE);
-	gtk_tree_path_free (path);
-
+	return status;
 }
 

@@ -55,7 +55,7 @@ int main (int argc, char **argv)
 
 	// Создаем главное окно
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW (window), "Здравствуй, мир!");
+	gtk_window_set_title (GTK_WINDOW (window), "LEW Editor");
 	gtk_widget_set_size_request (window, 900, 200);
 	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
@@ -403,6 +403,7 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 					//gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (addItem),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
 				}
@@ -434,7 +435,9 @@ lew_action_iten_add (GtkToolButton *toolbutton,
                      gpointer       user_data)
 {
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	lew_form_translation_edit (window, treeview, TRUE);
+	if (lew_form_translation_edit (window, treeview, TRUE)) {
+		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+	}
 }
 
 static void
@@ -442,7 +445,9 @@ lew_action_iten_edit (GtkToolButton *toolbutton,
                       gpointer       user_data)
 {
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	lew_form_translation_edit (window, treeview, FALSE);
+	if (lew_form_translation_edit (window, treeview, FALSE)) {
+		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+	}
 }
 
 

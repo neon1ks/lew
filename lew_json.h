@@ -17,9 +17,9 @@ int lew_read_json_file (gchar *filename, GtkListStore *model);
 JsonNode * lew_create_new_translation ( const gchar *english, const gchar *russian );
 
 
-void lew_form_translation_edit (GtkWidget    *window,
-                                GtkTreeView   *treeview,
-                                gboolean       isNewTranslation);
+gboolean  lew_form_translation_edit (GtkWidget    *window,
+                                     GtkTreeView   *treeview,
+                                     gboolean       isNewTranslation);
 
 
 
