@@ -8,8 +8,6 @@
 #include "lew_json.h"
 
 
-
-
 static GtkWidget   *window     = NULL;
 static GtkWidget   *treeview   = NULL;
 
@@ -33,21 +31,16 @@ int word_cmp (char* word1, char* word2);
 static void lew_add_columns (GtkTreeView *treeview);
 void lew_open_file_dialog (GtkToolButton *toolbutton, gpointer user_data);
 
-static gboolean
-treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data);
-
-static void
-lew_edit_item (GtkWidget *button, gpointer data);
+//~ static gboolean
+//~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 GtkTreeViewColumn *lew_create_column_index   (void);
 GtkTreeViewColumn *lew_create_column_english (void);
 GtkTreeViewColumn *lew_create_column_russian (void);
 
 
-void
-lew_action_iten_edit (GtkToolButton *toolbutton,
-                      gpointer       user_data);
-
+static void lew_action_iten_edit (GtkToolButton *toolbutton, gpointer user_data);
+static void lew_action_iten_add  (GtkToolButton *toolbutton, gpointer user_data);
 
 int main (int argc, char **argv)
 {
@@ -55,12 +48,7 @@ int main (int argc, char **argv)
 	GtkWidget   *sw;
 	GtkWidget   *toolbar;
 	GtkWidget   *vbox_main;
-	GtkWidget   *hbox;
-	GtkWidget   *button;
 	//GtkToolItem *item;
-
-	//GtkWidget   *frame_main;
-	//GtkWidget   *vbox_frame;
 
 	// Инициализируем GTK+
 	gtk_init (&argc, &argv);
@@ -84,7 +72,7 @@ int main (int argc, char **argv)
 	                                GTK_POLICY_AUTOMATIC,
 	                                GTK_POLICY_AUTOMATIC);
 
-	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
+	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING);
 
 	treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
 	gtk_widget_set_sensitive (GTK_WIDGET (treeview), FALSE);
@@ -93,7 +81,7 @@ int main (int argc, char **argv)
 	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
 	gtk_container_add (GTK_CONTAINER (sw), treeview);
 
-	//g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
+	//~ g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
 
 	toolbar = gtk_toolbar_new ();
 
@@ -101,6 +89,7 @@ int main (int argc, char **argv)
 	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (newItem), "gtk-new");
 	gtk_tool_button_set_label (GTK_TOOL_BUTTON (newItem), "New");
 	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (newItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (newItem), FALSE);
 	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), newItem, -1);
 
 	openItem = gtk_tool_button_new (NULL, NULL);
@@ -153,42 +142,17 @@ int main (int argc, char **argv)
 	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), removeItem, -1);
 
 
-	//frame_main = gtk_frame_new ("Fame");
-	//gtk_container_set_border_width (GTK_CONTAINER (frame_main), 8);
-	//vbox_frame = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
-	//gtk_container_set_border_width (GTK_CONTAINER (vbox_frame), 8);
-	//gtk_container_add(GTK_CONTAINER(frame_main), vbox_frame);
-
 	gtk_box_pack_start (GTK_BOX(vbox_main), toolbar, FALSE, TRUE, 0);
 	gtk_box_pack_start (GTK_BOX(vbox_main), sw, TRUE, TRUE, 0);
 	gtk_container_set_border_width (GTK_CONTAINER (sw), 8);
 
 
-	//gtk_box_pack_start (GTK_BOX(vbox_main), frame_main, TRUE, TRUE, 0);
-
-      /* some buttons */
-      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
-      gtk_box_set_homogeneous (GTK_BOX (hbox), TRUE);
-      //gtk_box_pack_start (GTK_BOX (vbox_frame), hbox, FALSE, FALSE, 0);
-
-      button = gtk_button_new_with_label ("Add item");
-      //g_signal_connect (button, "clicked",
-      //                  G_CALLBACK (add_item), treeview);
-      gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-
-      button = gtk_button_new_with_label ("Edit item");
-      g_signal_connect (button, "clicked", G_CALLBACK (lew_edit_item), treeview);
-      gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-
-      button = gtk_button_new_with_label ("Remove item");
-      //g_signal_connect (button, "clicked",
-      //                  G_CALLBACK (remove_item), treeview);
-      gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-
 	// Показываем окно вместе с виджетами
 	gtk_widget_show_all(window);
 
 	g_signal_connect(G_OBJECT(editItem), "clicked", G_CALLBACK(lew_action_iten_edit), (gpointer)treeview);
+	g_signal_connect(G_OBJECT(addItem),  "clicked", G_CALLBACK(lew_action_iten_add),  (gpointer)treeview);
+
 
 	// Соединяем сигнал завершения с выходом из программы
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), (gpointer)window);
@@ -293,7 +257,6 @@ char* read_line_from_stdin( char* buf )
 
 int translate_cmp(const char *translate, const char *russian)
 {
-
 
 	char *s1 = strdup(translate);
 	char *s1_d = s1;
@@ -407,28 +370,6 @@ int word_cmp (char* word1, char* word2)
 	return i_cmp;
 }
 
-
-
-
-static void
-lew_add_columns (GtkTreeView *treeview)
-{
-	GtkTreeViewColumn *col = NULL;
-
-	// Создаем столбец для индекса
-	col = lew_create_column_index ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
-
-	// Создаем столбец для английского текста
-	col = lew_create_column_english ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
-
-	// Создаем cтолбец для русского текста
-	col = lew_create_column_russian ();
-	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
-}
-
-
 void
 lew_open_file_dialog (GtkToolButton *toolbutton,
                       gpointer       user_data)
@@ -460,6 +401,7 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 				if ( !lew_read_json_file (filename, model) ) {
 					//gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (addItem),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
@@ -476,82 +418,68 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 
 
 
-static gboolean
-treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+//~ static gboolean
+//~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+//~ {
+	//~ GtkTreeView *treeview = GTK_TREE_VIEW (widget);
+	//~ if (event->type == GDK_DOUBLE_BUTTON_PRESS)
+	//~ {
+		//~ lew_edit_json_item (window, treeview);
+	//~ }
+	//~ return FALSE;
+//~ }
+
+static void
+lew_action_iten_add (GtkToolButton *toolbutton,
+                     gpointer       user_data)
 {
-	GtkTreeView *treeview = GTK_TREE_VIEW (widget);
+	GtkTreeIter iter;
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
+	//gtk_list_store_insert (GTK_LIST_STORE (model), &iter, -1);
 
-	if (event->type == GDK_DOUBLE_BUTTON_PRESS)
-	{
-		lew_edit_json_item (window, treeview);
-	}
+	gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 
-	return FALSE;
+	lew_form_translation_edit (window, model, &iter, -1);
 }
 
 static void
-lew_edit_item (GtkWidget *button, gpointer data)
-{
-	GtkTreeView *treeview = (GtkTreeView *)data;
-	lew_edit_json_item (window, treeview);
-}
-
-void
 lew_action_iten_edit (GtkToolButton *toolbutton,
                       gpointer       user_data)
 {
+	gint index;
+	GtkTreeIter iter;
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
-	lew_edit_json_item (window, treeview);
+	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
+	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
+
+	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
+	{
+		gtk_tree_model_get (model, &iter, COLUMN_NUM, &index, -1);
+		lew_form_translation_edit (window, model, &iter, index);
+	}
 }
-/*
+
+
+
 static void
-add_item (GtkWidget *button, gpointer data)
+lew_add_columns (GtkTreeView *treeview)
 {
-  //Item foo;
-  //GtkTreeIter current, iter;
-  //GtkTreePath *path;
+	GtkTreeViewColumn *col = NULL;
 
-  GtkTreeModel *model;
-  //GtkTreeViewColumn *column;
+	// Создаем столбец для индекса
+	col = lew_create_column_index ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 
+	// Создаем столбец для английского текста
+	col = lew_create_column_english ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 
-  GtkTreeView *treeview = (GtkTreeView *)data;
+	// Создаем cтолбец для русского текста
+	col = lew_create_column_russian ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+}
 
-  //g_return_if_fail (articles != NULL);
-
-  //foo.number = 0;
-  //foo.product = g_strdup ("Description here");
-  //foo.yummy = 50;
-  //g_array_append_vals (articles, &foo, 1);
-
-  // Insert a new row below the current one
-  //gtk_tree_view_get_cursor (treeview, &path, NULL);
-	model = gtk_tree_view_get_model (treeview);
-
-	gtk_list_store_insert (GTK_LIST_STORE (model), &iter, -1);
-
-	gtk_list_store_insert (model, &iter, -1);
-	//gtk_list_store_append (model, &iter);
-	gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-	                    COLUMN_ENG, english,
-	                    COLUMN_RUS, russian,
-	                    -1);
-
-
-  // Set the data for the new row
-  //gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                      COLUMN_ITEM_NUMBER, foo.number,
-                      COLUMN_ITEM_PRODUCT, foo.product,
-                      COLUMN_ITEM_YUMMY, foo.yummy,
-                      -1);
-
-  // Move focus to the new row
-  path = gtk_tree_model_get_path (model, &iter);
-  column = gtk_tree_view_get_column (treeview, 0);
-  gtk_tree_view_set_cursor (treeview, path, column, FALSE);
-
-  gtk_tree_path_free (path);
-}*/
 
 
 GtkTreeViewColumn *
