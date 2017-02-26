@@ -7,7 +7,20 @@ static JsonArray  *dictArray = NULL;
 
 static guint dictLen = 0;
 
-int lew_read_json_file (gchar *filename, GtkListStore *model)
+
+static void
+lew_object_add_index (JsonObject *object, const guint index)
+{
+	gint64 value = index;
+	JsonNode *nodeIndex = json_node_alloc();
+	nodeIndex = json_node_init_int (nodeIndex, value);
+	json_object_set_member (object, "index", nodeIndex);
+}
+
+
+
+
+gboolean lew_read_json_file (gchar *filename, GtkListStore *model)
 {
 
 	//~ g_print ("%s\n", filename);
@@ -23,7 +36,7 @@ int lew_read_json_file (gchar *filename, GtkListStore *model)
 		g_print ("Unable to parse `%s': %s\n", filename, error->message);
 		g_error_free (error);
 		g_object_unref (parser);
-		return 1;
+		return FALSE;
 	}
 	root = json_parser_get_root (parser);
 
@@ -52,9 +65,30 @@ int lew_read_json_file (gchar *filename, GtkListStore *model)
 		                    COLUMN_RUS, russian,
 		                    -1);
 	}
-	return 0;
+	return TRUE;
 }
 
+
+gboolean lew_write_json_file (const gchar *filename)
+{
+
+	GError *error = NULL;
+	JsonGenerator * dictGenerator;
+	dictGenerator = json_generator_new ();
+
+	json_generator_set_root (dictGenerator, root);
+	json_generator_set_pretty (dictGenerator, TRUE);
+
+	json_generator_to_file( dictGenerator, filename, &error );
+	if (error)
+	{
+		g_print ("Unable to write `%s': %s\n", filename, error->message);
+		g_error_free (error);
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 JsonNode * lew_create_new_translation (const gchar *english, const gchar *russian)
 {
@@ -72,6 +106,7 @@ JsonNode * lew_create_new_translation (const gchar *english, const gchar *russia
 
 	return nodeWord;
 }
+
 
 gboolean lew_form_translation_edit (GtkWidget    *window,
                                     GtkTreeView   *treeview,
@@ -160,6 +195,7 @@ gboolean lew_form_translation_edit (GtkWidget    *window,
 			objWord = json_node_get_object (nodeWord);
 			index = dictLen;
 			dictLen++;
+			lew_object_add_index (objWord, index);
 			gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 		} else {
 			json_object_set_string_member(objWord, "english", gtk_entry_get_text (GTK_ENTRY (local_entry1)));

@@ -20,6 +20,7 @@ static GtkToolItem *addItem    = NULL;
 static GtkToolItem *editItem   = NULL;
 static GtkToolItem *removeItem = NULL;
 
+static gchar       *filename   = NULL;
 
 
 static GtkTreeViewColumn *
@@ -221,8 +222,10 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 		case GTK_RESPONSE_ACCEPT:   // если нажали клавишу 'Open'
 			{
 				// Узнаём имя файла
-				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-				if ( !lew_read_json_file (filename, GTK_LIST_STORE (model)) ) {
+				filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+				if ( lew_read_json_file (filename, GTK_LIST_STORE (model)) )
+				{
 					gtk_widget_set_sensitive (GTK_WIDGET (addItem),   TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (editItem),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
@@ -239,6 +242,46 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 }
 
 
+
+static void
+lew_action_iten_save (GtkToolButton *toolbutton,
+                      gpointer       user_data)
+{
+
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	gint res;
+
+	dialog = gtk_file_chooser_dialog_new ("Save File",
+	                                      GTK_WINDOW (window),
+	                                      GTK_FILE_CHOOSER_ACTION_SAVE,
+	                                      "Cancel", GTK_RESPONSE_CANCEL,
+	                                      "Save", GTK_RESPONSE_ACCEPT,
+	                                      NULL);
+	chooser = GTK_FILE_CHOOSER (dialog);
+
+	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+
+	if (filename == NULL) {
+		gtk_file_chooser_set_current_name (chooser, "dict.json");
+	}
+	else {
+		gtk_file_chooser_set_filename (chooser, filename);
+	}
+
+	res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		if (filename != NULL) g_free (filename);
+		filename = gtk_file_chooser_get_filename (chooser);
+		if (lew_write_json_file (filename)) {
+			gtk_widget_set_sensitive (GTK_WIDGET (saveItem), FALSE);
+		}
+	}
+
+	gtk_widget_destroy (dialog);
+
+}
 
 static void
 lew_action_iten_add (GtkToolButton *toolbutton,
@@ -336,6 +379,7 @@ int main (int argc, char **argv)
 	g_signal_connect (G_OBJECT (openItem), "clicked", G_CALLBACK (lew_open_file_dialog), (gpointer)treeview);
 	g_signal_connect (G_OBJECT (editItem), "clicked", G_CALLBACK (lew_action_iten_edit), (gpointer)treeview);
 	g_signal_connect (G_OBJECT (addItem),  "clicked", G_CALLBACK (lew_action_iten_add),  (gpointer)treeview);
+	g_signal_connect (G_OBJECT (saveItem), "clicked", G_CALLBACK (lew_action_iten_save), (gpointer)treeview);
 
 	//~ g_signal_connect (treeview, "button-press-event", G_CALLBACK (treeview_onButtonPressed), NULL);
 

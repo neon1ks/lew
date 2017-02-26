@@ -12,7 +12,9 @@ enum
 	NUM_COLUMNS
 };
 
-int lew_read_json_file (gchar *filename, GtkListStore *model);
+
+gboolean lew_read_json_file  (gchar *filename, GtkListStore *model);
+gboolean lew_write_json_file (const gchar *filename);
 
 JsonNode * lew_create_new_translation (const gchar *english, const gchar *russian);
 
