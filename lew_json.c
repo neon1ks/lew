@@ -4,7 +4,6 @@ static JsonParser *parser    = NULL;
 static JsonNode   *root      = NULL;
 static JsonArray  *dictArray = NULL;
 
-
 static guint dictLen = 0;
 
 
@@ -16,7 +15,6 @@ lew_object_add_index (JsonObject *object, const guint index)
 	nodeIndex = json_node_init_int (nodeIndex, value);
 	json_object_set_member (object, "index", nodeIndex);
 }
-
 
 
 
