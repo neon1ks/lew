@@ -278,7 +278,7 @@ lew_action_iten_add (GtkToolButton *toolbutton,
 
 static void
 lew_action_iten_new (GtkToolButton *toolbutton,
-                      gpointer       user_data)
+                     gpointer       user_data)
 {
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
 

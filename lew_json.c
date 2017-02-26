@@ -9,7 +9,7 @@ static void
 lew_object_add_index (JsonObject *object, const guint index)
 {
 	gint64 value = index;
-	JsonNode *nodeIndex = json_node_alloc();
+	JsonNode *nodeIndex = json_node_alloc ();
 	nodeIndex = json_node_init_int (nodeIndex, value);
 	json_object_set_member (object, "index", nodeIndex);
 }
@@ -63,7 +63,7 @@ lew_read_json_file (gchar *filename, GtkListStore *model)
 
 	dictArray = json_object_get_array_member (json_node_get_object (root), "dictionary");
 
-	dictLen = json_array_get_length(dictArray);
+	dictLen = json_array_get_length (dictArray);
 
 	JsonObject *objWord;
 	const gchar *english = NULL;
@@ -96,7 +96,7 @@ lew_write_json_file (const gchar *filename)
 	json_generator_set_root (dictGenerator, root);
 	json_generator_set_pretty (dictGenerator, TRUE);
 
-	json_generator_to_file( dictGenerator, filename, &error );
+	json_generator_to_file (dictGenerator, filename, &error);
 	if (error)
 	{
 		g_print ("Unable to write `%s': %s\n", filename, error->message);
