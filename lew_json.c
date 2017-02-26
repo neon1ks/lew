@@ -57,8 +57,8 @@ lew_read_json_file (gchar *filename, GtkListStore *model)
 	}
 	root = json_parser_get_root (parser);
 
-	//~ if ( JSON_NODE_HOLDS_OBJECT(root) ) {
-		//~ printf("The node contains a JsonObject\n");
+	//~ if ( JSON_NODE_HOLDS_OBJECT (root) ) {
+		//~ printf ("The node contains a JsonObject\n");
 	//~ }
 
 	dictArray = json_object_get_array_member (json_node_get_object (root), "dictionary");
@@ -215,14 +215,14 @@ lew_form_translation_edit (GtkWidget     *window,
 			lew_object_add_index (objWord, index);
 			gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 		} else {
-			json_object_set_string_member(objWord, "english", gtk_entry_get_text (GTK_ENTRY (local_entry1)));
-			json_object_set_string_member(objWord, "russian", gtk_entry_get_text (GTK_ENTRY (local_entry2)));
+			json_object_set_string_member (objWord, "english", gtk_entry_get_text (GTK_ENTRY (local_entry1)));
+			json_object_set_string_member (objWord, "russian", gtk_entry_get_text (GTK_ENTRY (local_entry2)));
 		}
 
 		english = json_object_get_string_member (objWord, "english");
 		russian = json_object_get_string_member (objWord, "russian");
 
-		gtk_list_store_set (GTK_LIST_STORE(model), &iter,
+		gtk_list_store_set (GTK_LIST_STORE (model), &iter,
 		                    COLUMN_NUM, index,
 		                    COLUMN_ENG, english,
 		                    COLUMN_RUS, russian,

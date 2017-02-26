@@ -377,12 +377,12 @@ int main (int argc, char **argv)
 	// Соединяем сигнал завершения с выходом из программы
 	g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (gtk_main_quit), (gpointer)window);
 
-	//~ char *envhome = getenv("HOME");
+	//~ char *envhome = getenv ("HOME");
 	//~ char *dictFile = NULL;
-	//~ dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
-	//~ sprintf(dictFile,"%s/.dictionary.json",envhome);
-	//~ printf("%s\n", dictFile);
-	//~ createDictFile( dictFile );
+	//~ dictFile = calloc (strlen (envhome) + strlen (".dictionary.json") + 3, 1);
+	//~ sprintf (dictFile,"%s/.dictionary.json",envhome);
+	//~ printf ("%s\n", dictFile);
+	//~ createDictFile ( dictFile );
 
 	// Приложение переходит в вечный цикл ожидания действий пользователя
 	gtk_main ();
