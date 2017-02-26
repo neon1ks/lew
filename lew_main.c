@@ -22,7 +22,7 @@ static GtkToolItem *removeItem = NULL;
 
 
 
-GtkTreeViewColumn *
+static GtkTreeViewColumn *
 lew_create_column_index (void)
 {
 	GtkTreeViewColumn *col      = NULL;
@@ -31,7 +31,7 @@ lew_create_column_index (void)
 	col = gtk_tree_view_column_new ();
 
 	// Настраиваем столбец
-	gtk_tree_view_column_set_title (col, "Index");              // Заголовок столбца
+	gtk_tree_view_column_set_title (col, "Index");             // Заголовок столбца
 	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
 	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
 
@@ -45,7 +45,7 @@ lew_create_column_index (void)
 
 
 
-GtkTreeViewColumn *
+static GtkTreeViewColumn *
 lew_create_column_english (void)
 {
 	GtkTreeViewColumn *col      = NULL;
@@ -72,7 +72,7 @@ lew_create_column_english (void)
 
 
 
-GtkTreeViewColumn *
+static GtkTreeViewColumn *
 lew_create_column_russian (void)
 {
 	GtkTreeViewColumn *col      = NULL;
@@ -99,7 +99,7 @@ lew_create_column_russian (void)
 
 
 
-void
+static void
 lew_add_columns (GtkTreeView *treeview)
 {
 	GtkTreeViewColumn *col = NULL;
@@ -119,7 +119,7 @@ lew_add_columns (GtkTreeView *treeview)
 
 
 
-GtkWidget *
+static GtkWidget *
 lew_create_toolbar (void)
 {
 	GtkWidget *toolbar = gtk_toolbar_new ();
@@ -179,20 +179,20 @@ lew_create_toolbar (void)
 
 
 
-GtkWidget *
+static GtkWidget *
 lew_create_treeview (void)
 {
 	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
 	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
 	gtk_widget_set_sensitive (GTK_WIDGET (treeview), FALSE);
 	lew_add_columns (GTK_TREE_VIEW (treeview));
-	g_object_set(G_OBJECT(treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
+	g_object_set (G_OBJECT (treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
 	return treeview;
 }
 
 
 
-void
+static void
 lew_open_file_dialog (GtkToolButton *toolbutton,
                       gpointer       user_data)
 {
@@ -223,11 +223,11 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 				// Узнаём имя файла
 				gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 				if ( !lew_read_json_file (filename, GTK_LIST_STORE (model)) ) {
-					gtk_widget_set_sensitive (GTK_WIDGET (addItem),  TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (addItem),   TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (editItem),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (treeview), TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (openItem), FALSE);
+					gtk_widget_set_sensitive (GTK_WIDGET (treeview),  TRUE);
+					gtk_widget_set_sensitive (GTK_WIDGET (openItem),  FALSE);
 				}
 			}
 			break;
@@ -240,7 +240,7 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 
 
 
-void
+static void
 lew_action_iten_add (GtkToolButton *toolbutton,
                      gpointer       user_data)
 {
@@ -252,7 +252,7 @@ lew_action_iten_add (GtkToolButton *toolbutton,
 
 
 
-void
+static void
 lew_action_iten_edit (GtkToolButton *toolbutton,
                       gpointer       user_data)
 {
@@ -279,7 +279,7 @@ lew_action_iten_edit (GtkToolButton *toolbutton,
 
 
 
-GtkWidget *
+static GtkWidget *
 lew_create_scrolled_window (void)
 {
 	GtkWidget *sw = gtk_scrolled_window_new (NULL, NULL);
@@ -315,7 +315,7 @@ int main (int argc, char **argv)
 	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add(GTK_CONTAINER (window), vbox);
+	gtk_container_add (GTK_CONTAINER (window), vbox);
 
 	// Создание панели инструменов
 	toolbar = lew_create_toolbar ();
@@ -330,7 +330,7 @@ int main (int argc, char **argv)
 	gtk_container_add (GTK_CONTAINER (sw), treeview);
 
 	// Показываем окно со всеми виджетами
-	gtk_widget_show_all(window);
+	gtk_widget_show_all (window);
 
 
 	g_signal_connect (G_OBJECT (openItem), "clicked", G_CALLBACK (lew_open_file_dialog), (gpointer)treeview);
@@ -352,7 +352,7 @@ int main (int argc, char **argv)
 
 
 	// Приложение переходит в вечный цикл ожидания действий пользователя
-	gtk_main();
+	gtk_main ();
 
 
 	return EXIT_SUCCESS;
