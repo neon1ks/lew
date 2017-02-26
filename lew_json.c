@@ -1,10 +1,10 @@
 #include "lew_json.h"
 
-static JsonParser *parser    = NULL;
 static JsonNode   *root      = NULL;
 static JsonArray  *dictArray = NULL;
 
 static guint dictLen = 0;
+
 
 
 static void
@@ -26,7 +26,7 @@ gboolean lew_read_json_file (gchar *filename, GtkListStore *model)
 	GtkTreeIter iter;
 	GError *error;
 
-	parser = json_parser_new ();
+	JsonParser *parser = json_parser_new ();
 
 	error = NULL;
 	json_parser_load_from_file (parser, filename, &error);
@@ -67,6 +67,7 @@ gboolean lew_read_json_file (gchar *filename, GtkListStore *model)
 }
 
 
+
 gboolean lew_write_json_file (const gchar *filename)
 {
 
@@ -88,6 +89,8 @@ gboolean lew_write_json_file (const gchar *filename)
 	return TRUE;
 }
 
+
+
 JsonNode * lew_create_new_translation (const gchar *english, const gchar *russian)
 {
 	JsonNode *nodeWord = json_node_alloc();
@@ -104,6 +107,7 @@ JsonNode * lew_create_new_translation (const gchar *english, const gchar *russia
 
 	return nodeWord;
 }
+
 
 
 gboolean lew_form_translation_edit (GtkWidget    *window,
@@ -221,4 +225,5 @@ gboolean lew_form_translation_edit (GtkWidget    *window,
 	gtk_widget_destroy (dialog);
 	return status;
 }
+
 
