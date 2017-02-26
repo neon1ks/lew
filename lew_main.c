@@ -201,8 +201,6 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
 
-	gchar *home_dir = (gchar*)g_get_home_dir ();
-
 	GtkFileFilter *filter = gtk_file_filter_new (); // Создание фильтра
 	gtk_file_filter_add_pattern (filter, "*.json");
 
@@ -213,7 +211,7 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
 	                                                 NULL);
 
-	gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), home_dir);
+	gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir ());
 	gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
 
 	// запуск диалога выбора файла
@@ -237,8 +235,8 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 		default:
 			break;
 	}
-	gtk_widget_destroy (dialog);
 
+	gtk_widget_destroy (dialog);
 }
 
 
@@ -263,6 +261,7 @@ lew_action_iten_save (GtkToolButton *toolbutton,
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
 	if (filename == NULL) {
+		gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir ());
 		gtk_file_chooser_set_current_name (chooser, "dict.json");
 	}
 	else {
