@@ -7,8 +7,6 @@
 
 #include "lew_json.h"
 
-
-
 static GtkWidget   *window     = NULL;
 
 static GtkToolItem *newItem    = NULL;
@@ -21,7 +19,6 @@ static GtkToolItem *editItem   = NULL;
 static GtkToolItem *removeItem = NULL;
 
 static gchar       *filename   = NULL;
-
 
 static GtkTreeViewColumn *
 lew_create_column_index (void)
@@ -43,8 +40,6 @@ lew_create_column_index (void)
 
 	return col;
 }
-
-
 
 static GtkTreeViewColumn *
 lew_create_column_english (void)
@@ -71,8 +66,6 @@ lew_create_column_english (void)
 	return col;
 }
 
-
-
 static GtkTreeViewColumn *
 lew_create_column_russian (void)
 {
@@ -98,8 +91,6 @@ lew_create_column_russian (void)
 	return col;
 }
 
-
-
 static void
 lew_add_columns (GtkTreeView *treeview)
 {
@@ -117,8 +108,6 @@ lew_add_columns (GtkTreeView *treeview)
 	col = lew_create_column_russian ();
 	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 }
-
-
 
 static GtkWidget *
 lew_create_toolbar (void)
@@ -178,8 +167,6 @@ lew_create_toolbar (void)
 	return toolbar;
 }
 
-
-
 static GtkWidget *
 lew_create_treeview (void)
 {
@@ -190,8 +177,6 @@ lew_create_treeview (void)
 	g_object_set (G_OBJECT (treeview), "enable-grid-lines", GTK_TREE_VIEW_GRID_LINES_BOTH, NULL);
 	return treeview;
 }
-
-
 
 static void
 lew_open_file_dialog (GtkToolButton *toolbutton,
@@ -240,8 +225,6 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 	gtk_widget_destroy (dialog);
 }
 
-
-
 static void
 lew_action_iten_save (GtkToolButton *toolbutton,
                       gpointer       user_data)
@@ -283,8 +266,6 @@ lew_action_iten_save (GtkToolButton *toolbutton,
 
 }
 
-
-
 static void
 lew_action_iten_add (GtkToolButton *toolbutton,
                      gpointer       user_data)
@@ -294,8 +275,6 @@ lew_action_iten_add (GtkToolButton *toolbutton,
 		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
 	}
 }
-
-
 
 static void
 lew_action_iten_new (GtkToolButton *toolbutton,
@@ -313,8 +292,6 @@ lew_action_iten_new (GtkToolButton *toolbutton,
 	gtk_widget_set_sensitive (GTK_WIDGET (newItem),   FALSE);
 }
 
-
-
 static void
 lew_action_iten_edit (GtkToolButton *toolbutton,
                       gpointer       user_data)
@@ -324,8 +301,6 @@ lew_action_iten_edit (GtkToolButton *toolbutton,
 		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
 	}
 }
-
-
 
 //~ gboolean
 //~ treeview_onButtonPressed (GtkWidget *widget, GdkEvent *event, gpointer user_data)
@@ -339,8 +314,6 @@ lew_action_iten_edit (GtkToolButton *toolbutton,
 	//~ }
 	//~ return FALSE;
 //~ }
-
-
 
 static GtkWidget *
 lew_create_scrolled_window (void)
@@ -358,8 +331,6 @@ lew_create_scrolled_window (void)
 
 	return sw;
 }
-
-
 
 int main (int argc, char **argv)
 {
@@ -395,7 +366,6 @@ int main (int argc, char **argv)
 	// Показываем окно со всеми виджетами
 	gtk_widget_show_all (window);
 
-
 	g_signal_connect (G_OBJECT (openItem), "clicked", G_CALLBACK (lew_open_file_dialog), (gpointer)treeview);
 	g_signal_connect (G_OBJECT (editItem), "clicked", G_CALLBACK (lew_action_iten_edit), (gpointer)treeview);
 	g_signal_connect (G_OBJECT (newItem),  "clicked", G_CALLBACK (lew_action_iten_new),  (gpointer)treeview);
@@ -407,7 +377,6 @@ int main (int argc, char **argv)
 	// Соединяем сигнал завершения с выходом из программы
 	g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (gtk_main_quit), (gpointer)window);
 
-
 	//~ char *envhome = getenv("HOME");
 	//~ char *dictFile = NULL;
 	//~ dictFile = calloc(strlen(envhome) + strlen(".dictionary.json") + 3, 1);
@@ -415,13 +384,9 @@ int main (int argc, char **argv)
 	//~ printf("%s\n", dictFile);
 	//~ createDictFile( dictFile );
 
-
 	// Приложение переходит в вечный цикл ожидания действий пользователя
 	gtk_main ();
 
-
 	return EXIT_SUCCESS;
 }
-
-
 
