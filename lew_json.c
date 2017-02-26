@@ -18,6 +18,30 @@ lew_object_add_index (JsonObject *object, const guint index)
 
 
 
+void lew_create_json_root (void)
+{
+	JsonObject * rootObject = NULL;
+	rootObject = json_object_new ();
+
+	root = json_node_alloc ();
+	root = json_node_init_object (root, rootObject);
+
+	JsonNode *node1 = NULL;
+	node1 = json_node_alloc ();
+	node1 = json_node_init_string (node1, "utf-8");
+	json_object_set_member (rootObject, "charset", node1);
+
+	dictArray = json_array_new ();
+	JsonNode *node2 = NULL;
+	node2 = json_node_alloc ();
+	node2 = json_node_init_array (node2, dictArray);
+	json_object_set_member (rootObject, "dictionary", node2);
+
+	dictLen = 0;
+}
+
+
+
 gboolean lew_read_json_file (gchar *filename, GtkListStore *model)
 {
 

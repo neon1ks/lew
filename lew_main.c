@@ -129,7 +129,7 @@ lew_create_toolbar (void)
 	gtk_tool_button_set_icon_name (GTK_TOOL_BUTTON (newItem), "gtk-new");
 	gtk_tool_button_set_label (GTK_TOOL_BUTTON (newItem), "New");
 	gtk_tool_item_set_is_important (GTK_TOOL_ITEM (newItem), TRUE);
-	gtk_widget_set_sensitive (GTK_WIDGET (newItem), FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET (newItem), TRUE);
 	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), newItem, -1);
 
 	openItem = gtk_tool_button_new (NULL, NULL);
@@ -229,6 +229,7 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (treeview),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (openItem),  FALSE);
+					gtk_widget_set_sensitive (GTK_WIDGET (newItem),   FALSE);
 				}
 			}
 			break;
@@ -282,6 +283,8 @@ lew_action_iten_save (GtkToolButton *toolbutton,
 
 }
 
+
+
 static void
 lew_action_iten_add (GtkToolButton *toolbutton,
                      gpointer       user_data)
@@ -290,6 +293,24 @@ lew_action_iten_add (GtkToolButton *toolbutton,
 	if (lew_form_translation_edit (window, treeview, TRUE)) {
 		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
 	}
+}
+
+
+
+static void
+lew_action_iten_new (GtkToolButton *toolbutton,
+                      gpointer       user_data)
+{
+	GtkTreeView *treeview = (GtkTreeView *)user_data;
+
+	lew_create_json_root ();
+
+	gtk_widget_set_sensitive (GTK_WIDGET (addItem),   TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (editItem),  FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (treeview),  TRUE);
+	gtk_widget_set_sensitive (GTK_WIDGET (openItem),  FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET (newItem),   FALSE);
 }
 
 
@@ -377,6 +398,7 @@ int main (int argc, char **argv)
 
 	g_signal_connect (G_OBJECT (openItem), "clicked", G_CALLBACK (lew_open_file_dialog), (gpointer)treeview);
 	g_signal_connect (G_OBJECT (editItem), "clicked", G_CALLBACK (lew_action_iten_edit), (gpointer)treeview);
+	g_signal_connect (G_OBJECT (newItem),  "clicked", G_CALLBACK (lew_action_iten_new),  (gpointer)treeview);
 	g_signal_connect (G_OBJECT (addItem),  "clicked", G_CALLBACK (lew_action_iten_add),  (gpointer)treeview);
 	g_signal_connect (G_OBJECT (saveItem), "clicked", G_CALLBACK (lew_action_iten_save), (gpointer)treeview);
 

@@ -13,6 +13,8 @@ enum
 };
 
 
+void lew_create_json_root (void);
+
 gboolean lew_read_json_file  (gchar *filename, GtkListStore *model);
 gboolean lew_write_json_file (const gchar *filename);
 
