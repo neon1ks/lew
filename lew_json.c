@@ -6,12 +6,12 @@ static JsonArray  *dictArray = NULL;
 static guint dictLen = 0;
 
 static void
-lew_object_add_index (JsonObject *object, const guint index)
+lew_object_add_id (JsonObject *object, const guint id)
 {
-	gint64 value = index;
+	gint64 value = id;
 	JsonNode *nodeIndex = json_node_alloc ();
 	nodeIndex = json_node_init_int (nodeIndex, value);
-	json_object_set_member (object, "index", nodeIndex);
+	json_object_set_member (object, "id", nodeIndex);
 }
 
 void lew_create_json_root (void)
@@ -131,7 +131,7 @@ lew_form_translation_edit (GtkWidget     *window,
                            gboolean       isNewTranslation)
 {
 	gboolean status = FALSE;
-	guint index;
+	guint id;
 	GtkTreeIter iter;
 	GtkTreeSelection *selection = NULL;
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
@@ -139,7 +139,7 @@ lew_form_translation_edit (GtkWidget     *window,
 	if (!isNewTranslation) {
 		selection = gtk_tree_view_get_selection (treeview);
 		if (gtk_tree_selection_get_selected (selection, NULL, &iter)) {
-			gtk_tree_model_get (model, &iter, COLUMN_NUM, &index, -1);
+			gtk_tree_model_get (model, &iter, COLUMN_NUM, &id, -1);
 		}
 		else {
 			return FALSE;
@@ -191,7 +191,7 @@ lew_form_translation_edit (GtkWidget     *window,
 	gtk_label_set_mnemonic_widget (GTK_LABEL (label), local_entry2);
 
 	if ( !isNewTranslation ) {
-		objWord = json_array_get_object_element (dictArray, index);
+		objWord = json_array_get_object_element (dictArray, id);
 		english = json_object_get_string_member (objWord, "english");
 		russian = json_object_get_string_member (objWord, "russian");
 		gtk_entry_set_text (GTK_ENTRY (local_entry1), english);
@@ -210,9 +210,9 @@ lew_form_translation_edit (GtkWidget     *window,
 			                                       gtk_entry_get_text (GTK_ENTRY (local_entry2)));
 			json_array_add_element (dictArray, nodeWord);
 			objWord = json_node_get_object (nodeWord);
-			index = dictLen;
+			id = dictLen;
 			dictLen++;
-			lew_object_add_index (objWord, index);
+			lew_object_add_id (objWord, id);
 			gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 		} else {
 			json_object_set_string_member (objWord, "english", gtk_entry_get_text (GTK_ENTRY (local_entry1)));
@@ -223,7 +223,7 @@ lew_form_translation_edit (GtkWidget     *window,
 		russian = json_object_get_string_member (objWord, "russian");
 
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-		                    COLUMN_NUM, index,
+		                    COLUMN_NUM, id,
 		                    COLUMN_ENG, english,
 		                    COLUMN_RUS, russian,
 		                    -1);
@@ -241,3 +241,7 @@ lew_form_translation_edit (GtkWidget     *window,
 	return status;
 }
 
+guint lew_get_dict_len (void)
+{
+	return dictLen;
+}

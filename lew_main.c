@@ -21,7 +21,7 @@ static GtkToolItem *removeItem = NULL;
 static gchar       *filename   = NULL;
 
 static GtkTreeViewColumn *
-lew_create_column_index (void)
+lew_create_column_id (void)
 {
 	GtkTreeViewColumn *col      = NULL;
 	GtkCellRenderer   *renderer = NULL;
@@ -29,7 +29,7 @@ lew_create_column_index (void)
 	col = gtk_tree_view_column_new ();
 
 	// Настраиваем столбец
-	gtk_tree_view_column_set_title (col, "Index");             // Заголовок столбца
+	gtk_tree_view_column_set_title (col, "Id");             // Заголовок столбца
 	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
 	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
 
@@ -97,7 +97,7 @@ lew_add_columns (GtkTreeView *treeview)
 	GtkTreeViewColumn *col = NULL;
 
 	// Создаем столбец для индекса
-	col = lew_create_column_index ();
+	col = lew_create_column_id ();
 	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 
 	// Создаем столбец для английского текста
@@ -210,11 +210,14 @@ lew_open_file_dialog (GtkToolButton *toolbutton,
 				if ( lew_read_json_file (filename, GTK_LIST_STORE (model)) )
 				{
 					gtk_widget_set_sensitive (GTK_WIDGET (addItem),   TRUE);
-					gtk_widget_set_sensitive (GTK_WIDGET (editItem),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (treeview),  TRUE);
 					gtk_widget_set_sensitive (GTK_WIDGET (openItem),  FALSE);
 					gtk_widget_set_sensitive (GTK_WIDGET (newItem),   FALSE);
+
+					if (lew_get_dict_len () > 0) {
+						gtk_widget_set_sensitive (GTK_WIDGET (editItem),  TRUE);
+					}
 				}
 			}
 			break;
@@ -273,6 +276,7 @@ lew_action_iten_add (GtkToolButton *toolbutton,
 	GtkTreeView *treeview = (GtkTreeView *)user_data;
 	if (lew_form_translation_edit (window, treeview, TRUE)) {
 		gtk_widget_set_sensitive (GTK_WIDGET (saveItem), TRUE);
+		gtk_widget_set_sensitive (GTK_WIDGET (editItem), TRUE);
 	}
 }
 
@@ -284,6 +288,7 @@ lew_action_iten_new (GtkToolButton *toolbutton,
 
 	lew_create_json_root ();
 
+	gtk_widget_set_sensitive (GTK_WIDGET (saveItem),  TRUE);
 	gtk_widget_set_sensitive (GTK_WIDGET (addItem),   TRUE);
 	gtk_widget_set_sensitive (GTK_WIDGET (editItem),  FALSE);
 	gtk_widget_set_sensitive (GTK_WIDGET (closeItem), TRUE);
