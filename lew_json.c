@@ -120,6 +120,7 @@ lew_read_json_file (gchar *filename, GtkListStore *model)
 		                    COLUMN_NUM, i,
 		                    COLUMN_ENG, english,
 		                    COLUMN_RUS, russian,
+		                    COLUMN_STATUS, i,
 		                    -1);
 	}
 
@@ -288,6 +289,7 @@ lew_form_translation_edit (GtkWidget     *window,
 		                    COLUMN_NUM, id,
 		                    COLUMN_ENG, english,
 		                    COLUMN_RUS, russian,
+		                    COLUMN_STATUS, id,
 		                    -1);
 
 		// Перемещение фокуса на добавленный перевод

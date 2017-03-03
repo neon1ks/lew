@@ -30,6 +30,7 @@ lew_create_column_id (void)
 
 	// Настраиваем столбец
 	gtk_tree_view_column_set_title (col, "Id");             // Заголовок столбца
+	gtk_tree_view_column_set_min_width (col, 30);
 	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
 	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
 
@@ -51,14 +52,14 @@ lew_create_column_english (void)
 
 	// Настраиваем столбец
 	gtk_tree_view_column_set_title (col, "English");           // Заголовок
-	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
-	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_fixed_width (col, 550);
+	gtk_tree_view_column_set_resizable (col, FALSE);
 	gtk_tree_view_column_set_sort_column_id (col, COLUMN_ENG); // Сортировка
 
 	// Создаем и настраиваем обработчик ячеек
 	renderer = gtk_cell_renderer_text_new ();
-	g_object_set (G_OBJECT (renderer), "width-chars", 49, NULL);
-	g_object_set (G_OBJECT (renderer), "wrap-width",  49, NULL);
+	g_object_set (G_OBJECT (renderer), "width-chars", 70, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  70, NULL);
 	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
 	gtk_tree_view_column_pack_start (col, renderer, TRUE);
 	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_ENG);
@@ -76,17 +77,39 @@ lew_create_column_russian (void)
 
 	// Настройка столбца
 	gtk_tree_view_column_set_title (col, "Russian");           // Заголовок
-	gtk_tree_view_column_set_min_width (col, 395);             // Минимальная ширина
-	gtk_tree_view_column_set_resizable (col, TRUE);            // Изменяемость ширины
+	gtk_tree_view_column_set_fixed_width (col, 550);
+	gtk_tree_view_column_set_resizable (col, FALSE);
 	gtk_tree_view_column_set_sort_column_id (col, COLUMN_RUS); // Сортировка
 
 	// Создаем и настраиваем обработчик ячеек
 	renderer = gtk_cell_renderer_text_new ();
-	g_object_set (G_OBJECT (renderer), "width-chars", 49, NULL);
-	g_object_set (G_OBJECT (renderer), "wrap-width",  49, NULL);
+	g_object_set (G_OBJECT (renderer), "width-chars", 70, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  70, NULL);
 	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
 	gtk_tree_view_column_pack_start (col, renderer, TRUE);
 	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_RUS);
+
+	return col;
+}
+
+static GtkTreeViewColumn *
+lew_create_column_status (void)
+{
+	GtkTreeViewColumn *col      = NULL;
+	GtkCellRenderer   *renderer = NULL;
+
+	col = gtk_tree_view_column_new ();
+
+	// Настраиваем столбец
+	gtk_tree_view_column_set_title (col, "Status");             // Заголовок столбца
+	gtk_tree_view_column_set_min_width (col, 30);
+	gtk_tree_view_column_set_resizable (col, TRUE);            // Включение изменяемости ширины столбца
+	gtk_tree_view_column_set_sort_column_id (col, COLUMN_NUM); // Сортировка
+
+	// Создаем и настраиваем обработчик ячеек
+	renderer = gtk_cell_renderer_text_new ();
+	gtk_tree_view_column_pack_start (col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_NUM);
 
 	return col;
 }
@@ -106,6 +129,10 @@ lew_add_columns (GtkTreeView *treeview)
 
 	// Создаем cтолбец для русского текста
 	col = lew_create_column_russian ();
+	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
+
+	// Создаем cтолбец для статуса
+	col = lew_create_column_status ();
 	gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), col);
 }
 
@@ -170,7 +197,7 @@ lew_create_toolbar (void)
 static GtkWidget *
 lew_create_treeview (void)
 {
-	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
+	GtkListStore *model = gtk_list_store_new (NUM_COLUMNS, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT);
 	GtkWidget *treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (model));
 	gtk_widget_set_sensitive (GTK_WIDGET (treeview), FALSE);
 	lew_add_columns (GTK_TREE_VIEW (treeview));
@@ -350,7 +377,7 @@ int main (int argc, char **argv)
 	// Создание главного окна
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW (window), "LEW Editor");
-	gtk_widget_set_size_request (window, 900, 200);
+	gtk_widget_set_size_request (window, 1280, 200);
 	gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
