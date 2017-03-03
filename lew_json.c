@@ -5,6 +5,7 @@ static JsonArray  *dictArray = NULL;
 
 static guint dictLen = 0;
 
+/*
 static void
 lew_object_add_id (JsonObject *object, const guint id)
 {
@@ -12,6 +13,45 @@ lew_object_add_id (JsonObject *object, const guint id)
 	JsonNode *nodeIndex = json_node_alloc ();
 	nodeIndex = json_node_init_int (nodeIndex, value);
 	json_object_set_member (object, "id", nodeIndex);
+}*/
+
+gchar * lew_get_text_from_buffer (GtkTextBuffer *buffer)
+{
+
+	GtkTextIter iter_prev;
+	GtkTextIter iter;
+
+	gint i = 0;
+	gchar * line;
+	GString * text = g_string_new (NULL);
+
+	gtk_text_buffer_get_start_iter (buffer, &iter);
+	iter_prev = iter;
+
+	while ( gtk_text_iter_forward_line (&iter) || gtk_text_iter_is_end (&iter) ) {
+
+		line = gtk_text_buffer_get_text (buffer, &iter_prev, &iter, FALSE);
+
+		line = g_strchug (line);
+		line = g_strchomp (line);
+
+		if ( strlen (line) > 0 ) {
+			if ( i > 0 ) {
+				text = g_string_append_c (text, ' ');
+			}
+			i++;
+			text = g_string_append (text, line);
+		}
+		iter_prev = iter;
+
+		g_free (line);
+
+		if ( gtk_text_iter_is_end (&iter) ) {
+			break;
+		}
+	}
+
+	return text->str;
 }
 
 void lew_create_json_root (void)
@@ -146,16 +186,36 @@ lew_form_translation_edit (GtkWidget     *window,
 		}
 	}
 
-	GtkWidget   *dialog       = NULL;
-	GtkWidget   *content_area = NULL;
-	GtkWidget   *grid         = NULL;
-	GtkWidget   *local_entry1 = NULL;
-	GtkWidget   *local_entry2 = NULL;
-	GtkWidget   *label        = NULL;
+	GtkWidget   *dialog          = NULL;
+	GtkWidget   *content_area    = NULL;
+	GtkWidget   *scrolled_window = NULL;
+	GtkWidget   *vbox            = NULL;
+	//GtkWidget   *grid            = NULL;
+	//GtkWidget   *local_entry1    = NULL;
+	//GtkWidget   *local_entry2    = NULL;
+	GtkWidget   *label           = NULL;
 
 	JsonObject  *objWord      = NULL;
 	const gchar *english      = NULL;
 	const gchar *russian      = NULL;
+
+	GtkTextBuffer *buffer_eng;
+	GtkTextBuffer *buffer_rus;
+
+	buffer_eng = gtk_text_buffer_new (NULL);
+	buffer_rus = gtk_text_buffer_new (NULL);
+
+	GtkWidget *text_view_eng;
+	GtkWidget *text_view_rus;
+
+	text_view_eng = gtk_text_view_new_with_buffer (buffer_eng);
+	text_view_rus = gtk_text_view_new_with_buffer (buffer_rus);
+
+	gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (text_view_eng), GTK_WRAP_WORD);
+	gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (text_view_rus), GTK_WRAP_WORD);
+
+	gtk_widget_set_size_request (text_view_eng, 470, 50);
+	gtk_widget_set_size_request (text_view_rus, 470, 50);
 
 	gint response;
 
@@ -168,34 +228,34 @@ lew_form_translation_edit (GtkWidget     *window,
 
 	content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
 	gtk_container_set_border_width (GTK_CONTAINER (content_area), 10);
+	gtk_widget_set_size_request (content_area, 500, 220);
 
-	grid = gtk_grid_new ();
+	scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+	                                GTK_POLICY_AUTOMATIC,
+	                                GTK_POLICY_AUTOMATIC);
+	gtk_box_pack_start (GTK_BOX (content_area), scrolled_window, TRUE, TRUE, 0);
 
-	gtk_grid_set_row_spacing (GTK_GRID (grid), 5);
-	gtk_grid_set_column_spacing (GTK_GRID (grid), 5);
-	gtk_box_pack_start (GTK_BOX (content_area), grid, TRUE, TRUE, 0);
+	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
+
+	gtk_container_add (GTK_CONTAINER (scrolled_window), vbox);
 
 	label = gtk_label_new_with_mnemonic ("english");
-	gtk_grid_attach (GTK_GRID (grid), label, 0, 0, 1, 1);
-	local_entry1 = gtk_entry_new ();
+	gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), text_view_eng, FALSE, FALSE, 0);
 
-	gtk_grid_attach (GTK_GRID (grid), local_entry1, 1, 0, 1, 1);
-	gtk_label_set_mnemonic_widget (GTK_LABEL (label), local_entry1);
 
 	label = gtk_label_new_with_mnemonic ("russian");
-	gtk_grid_attach (GTK_GRID (grid), label, 0, 1, 1, 1);
+	gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), text_view_rus, FALSE, FALSE, 0);
 
-	local_entry2 = gtk_entry_new ();
-
-	gtk_grid_attach (GTK_GRID (grid), local_entry2, 1, 1, 1, 1);
-	gtk_label_set_mnemonic_widget (GTK_LABEL (label), local_entry2);
 
 	if ( !isNewTranslation ) {
 		objWord = json_array_get_object_element (dictArray, id);
 		english = json_object_get_string_member (objWord, "english");
 		russian = json_object_get_string_member (objWord, "russian");
-		gtk_entry_set_text (GTK_ENTRY (local_entry1), english);
-		gtk_entry_set_text (GTK_ENTRY (local_entry2), russian);
+		gtk_text_buffer_set_text (buffer_eng, english, strlen (english));
+		gtk_text_buffer_set_text (buffer_rus, russian, strlen (russian));
 	}
 
 	gtk_widget_show_all (content_area);
@@ -204,19 +264,21 @@ lew_form_translation_edit (GtkWidget     *window,
 
 	if (response == GTK_RESPONSE_OK) {
 
+		gchar *text_eng = lew_get_text_from_buffer (buffer_eng);
+		gchar *text_rus = lew_get_text_from_buffer (buffer_rus);
+
 		if ( isNewTranslation ) {
+
 			JsonNode *nodeWord = NULL;
-			nodeWord = lew_create_new_translation (gtk_entry_get_text (GTK_ENTRY (local_entry1)),
-			                                       gtk_entry_get_text (GTK_ENTRY (local_entry2)));
+			nodeWord = lew_create_new_translation (text_eng, text_rus);
 			json_array_add_element (dictArray, nodeWord);
 			objWord = json_node_get_object (nodeWord);
 			id = dictLen;
 			dictLen++;
-			lew_object_add_id (objWord, id);
 			gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 		} else {
-			json_object_set_string_member (objWord, "english", gtk_entry_get_text (GTK_ENTRY (local_entry1)));
-			json_object_set_string_member (objWord, "russian", gtk_entry_get_text (GTK_ENTRY (local_entry2)));
+			json_object_set_string_member (objWord, "english", text_eng);
+			json_object_set_string_member (objWord, "russian", text_rus);
 		}
 
 		english = json_object_get_string_member (objWord, "english");
@@ -234,6 +296,9 @@ lew_form_translation_edit (GtkWidget     *window,
 		gtk_tree_view_set_cursor (treeview, path, column, FALSE);
 		gtk_tree_path_free (path);
 		status = TRUE;
+
+		g_free (text_eng);
+		g_free (text_rus);
 	}
 
 	gtk_widget_destroy (dialog);
