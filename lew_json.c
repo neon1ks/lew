@@ -229,7 +229,7 @@ lew_form_translation_edit (GtkWidget     *window,
 
 	content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
 	gtk_container_set_border_width (GTK_CONTAINER (content_area), 10);
-	gtk_widget_set_size_request (content_area, 500, 220);
+	gtk_widget_set_size_request (content_area, 700, 220);
 
 	scrolled_window = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),

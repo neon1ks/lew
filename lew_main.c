@@ -58,8 +58,8 @@ lew_create_column_english (void)
 
 	// Создаем и настраиваем обработчик ячеек
 	renderer = gtk_cell_renderer_text_new ();
-	g_object_set (G_OBJECT (renderer), "width-chars", 70, NULL);
-	g_object_set (G_OBJECT (renderer), "wrap-width",  70, NULL);
+	g_object_set (G_OBJECT (renderer), "width-chars", 67, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  67, NULL);
 	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
 	gtk_tree_view_column_pack_start (col, renderer, TRUE);
 	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_ENG);
@@ -83,8 +83,8 @@ lew_create_column_russian (void)
 
 	// Создаем и настраиваем обработчик ячеек
 	renderer = gtk_cell_renderer_text_new ();
-	g_object_set (G_OBJECT (renderer), "width-chars", 70, NULL);
-	g_object_set (G_OBJECT (renderer), "wrap-width",  70, NULL);
+	g_object_set (G_OBJECT (renderer), "width-chars", 67, NULL);
+	g_object_set (G_OBJECT (renderer), "wrap-width",  67, NULL);
 	g_object_set (G_OBJECT (renderer), "wrap-mode", PANGO_WRAP_WORD, NULL);
 	gtk_tree_view_column_pack_start (col, renderer, TRUE);
 	gtk_tree_view_column_add_attribute (col, renderer, "text", COLUMN_RUS);
